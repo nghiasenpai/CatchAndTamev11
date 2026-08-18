@@ -247,7 +247,7 @@ local function disableWaterWalk()
     end)
 end
 
-AddToggle("🏄 Đi Trên Mặt Nước", function(state)
+AddToggle("🏄 Đi Trên Mặt Nước(fix)", function(state)
     waterWalkEnabled = state
     if state then
         enableWaterWalk()
@@ -414,7 +414,7 @@ local function stopESP()
     clearAllESP()
 end
 
-AddToggle("👑 ESP Định Vị (Boss Vàng | Mythical Đỏ | Divine Cam)", function(state)
+AddToggle("👑 ESP Định Vị (Boss Vàng | Mythical Đỏ | Divine Cam)-fix", function(state)
     espEnabled = state
     if state then
         startESP()
