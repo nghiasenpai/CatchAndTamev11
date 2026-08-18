@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT [⚓] Nghia Senpai hub (FIXED WATER + DRAGON + ISLAND LANDING + SMOOTH FLY)
+-- SCRIPT [⚓] Nghia Senpai hub (FIXED ESP COLOR)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -9,31 +9,23 @@ local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local Lighting = game:GetService("Lighting")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
-local MarketplaceService = game:GetService("MarketplaceService")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Tốc độ tăng 200% (3x)
 local SPEED_MULTIPLIER = 3.0
 
--- Container an toàn
 local parentContainer = nil
-local successCore = pcall(function()
-	return CoreGui
-end)
+local successCore = pcall(function() return CoreGui end)
 
 if successCore and CoreGui then
-	parentContainer = CoreGui
+    parentContainer = CoreGui
 else
-	parentContainer = LocalPlayer:WaitForChild("PlayerGui")
+    parentContainer = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Xóa UI cũ nếu có
 if parentContainer:FindFirstChild("CatchHubFixedUI_FinalAntiSink") then
-	parentContainer.CatchHubFixedUI_FinalAntiSink:Destroy()
+    parentContainer.CatchHubFixedUI_FinalAntiSink:Destroy()
 end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -44,63 +36,59 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentContainer
 
--- Main Frame
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 300, 0, 700)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -350)
-MainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+MainFrame.Size = UDim2.new(0, 320, 0, 700)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -350)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = true
 MainFrame.ZIndex = 10
 
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(0, 220, 130)
-MainStroke.Thickness = 1.5
+MainStroke.Thickness = 2
 
--- Title Bar
 local TitleBar = Instance.new("Frame", MainFrame)
-TitleBar.Size = UDim2.new(1, 0, 0, 35)
-TitleBar.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
-Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 8)
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
 
 local TitleText = Instance.new("TextLabel", TitleBar)
 TitleText.Size = UDim2.new(1, -40, 1, 0)
 TitleText.Position = UDim2.new(0, 10, 0, 0)
 TitleText.BackgroundTransparency = 1
 TitleText.Text = "⚓ Nghia Senpai Hub ⚓"
-TitleText.TextColor3 = Color3.fromRGB(0, 220, 130)
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 10
+TitleText.TextSize = 12
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 
 local CloseBtn = Instance.new("TextButton", TitleBar)
 CloseBtn.Size = UDim2.new(0, 24, 0, 24)
-CloseBtn.Position = UDim2.new(1, -28, 0, 5)
+CloseBtn.Position = UDim2.new(1, -28, 0, 8)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 12
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
 CloseBtn.MouseButton1Click:Connect(function() 
-	MainFrame.Visible = false 
+    MainFrame.Visible = false 
 end)
 
--- Bật tắt menu bằng Ctrl
 UserInputService.InputBegan:Connect(function(input, gpe)
-	if not gpe and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
-		MainFrame.Visible = not MainFrame.Visible
-	end
+    if not gpe and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
+        MainFrame.Visible = not MainFrame.Visible
+    end
 end)
 
--- Container
 local Container = Instance.new("ScrollingFrame", MainFrame)
-Container.Size = UDim2.new(1, -12, 1, -45)
-Container.Position = UDim2.new(0, 6, 0, 40)
+Container.Size = UDim2.new(1, -12, 1, -50)
+Container.Position = UDim2.new(0, 6, 0, 45)
 Container.BackgroundTransparency = 1
 Container.ScrollBarThickness = 3
 Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -112,366 +100,397 @@ UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 6)
 
 local function AddButton(name, color, callback)
-	local btn = Instance.new("TextButton", Container)
-	btn.Size = UDim2.new(1, 0, 0, 32)
-	btn.BackgroundColor3 = color or Color3.fromRGB(45, 45, 55)
-	btn.Text = name
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 11
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-	btn.MouseButton1Click:Connect(callback)
-	return btn
+    local btn = Instance.new("TextButton", Container)
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = color or Color3.fromRGB(40, 40, 50)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 11
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(callback)
+    return btn
 end
 
 local function AddToggle(name, callback)
-	local btn = Instance.new("TextButton", Container)
-	btn.Size = UDim2.new(1, 0, 0, 32)
-	btn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-	btn.Text = name .. " : [OFF]"
-	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-	btn.Font = Enum.Font.GothamSemibold
-	btn.TextSize = 11
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-	
-	local enabled = false
-	local function updateState(newState)
-		enabled = newState
-		btn.Text = name .. " : " .. (enabled and "[ON]" or "[OFF]")
-		btn.BackgroundColor3 = enabled and Color3.fromRGB(0, 140, 70) or Color3.fromRGB(35, 35, 42)
-		btn.TextColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-		callback(enabled)
-	end
+    local btn = Instance.new("TextButton", Container)
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    btn.Text = name .. " : [OFF]"
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 11
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    local enabled = false
+    local function updateState(newState)
+        enabled = newState
+        btn.Text = name .. " : " .. (enabled and "[ON]" or "[OFF]")
+        btn.BackgroundColor3 = enabled and Color3.fromRGB(0, 140, 70) or Color3.fromRGB(35, 35, 45)
+        btn.TextColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+        callback(enabled)
+    end
 
-	btn.MouseButton1Click:Connect(function() updateState(not enabled) end)
-	return { SetState = updateState, GetState = function() return enabled end }
+    btn.MouseButton1Click:Connect(function() updateState(not enabled) end)
+    return { SetState = updateState, GetState = function() return enabled end }
 end
 
 local function AddInput(labelTitle, defaultVal, callback)
-	local frame = Instance.new("Frame", Container)
-	frame.Size = UDim2.new(1, 0, 0, 32)
-	frame.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+    local frame = Instance.new("Frame", Container)
+    frame.Size = UDim2.new(1, 0, 0, 35)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
-	local label = Instance.new("TextLabel", frame)
-	label.Size = UDim2.new(0.65, 0, 1, 0)
-	label.Position = UDim2.new(0, 8, 0, 0)
-	label.BackgroundTransparency = 1
-	label.Text = labelTitle
-	label.TextColor3 = Color3.fromRGB(200, 200, 200)
-	label.Font = Enum.Font.GothamSemibold
-	label.TextSize = 11
-	label.TextXAlignment = Enum.TextXAlignment.Left
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.65, 0, 1, 0)
+    label.Position = UDim2.new(0, 8, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelTitle
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 11
+    label.TextXAlignment = Enum.TextXAlignment.Left
 
-	local box = Instance.new("TextBox", frame)
-	box.Size = UDim2.new(0.3, -6, 0.7, 0)
-	box.Position = UDim2.new(0.7, 0, 0.15, 0)
-	box.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-	box.Text = tostring(defaultVal)
-	box.TextColor3 = Color3.fromRGB(255, 255, 255)
-	box.Font = Enum.Font.GothamBold
-	box.TextSize = 11
-	Instance.new("UICorner", box).CornerRadius = UDim.new(0, 4)
+    local box = Instance.new("TextBox", frame)
+    box.Size = UDim2.new(0.3, -6, 0.7, 0)
+    box.Position = UDim2.new(0.7, 0, 0.15, 0)
+    box.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    box.Text = tostring(defaultVal)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.GothamBold
+    box.TextSize = 11
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
 
-	box.FocusLost:Connect(function()
-		local val = box.Text
-		if tonumber(val) then
-			callback(tonumber(val))
-		else
-			callback(val)
-		end
-	end)
+    box.FocusLost:Connect(function()
+        local val = box.Text
+        if tonumber(val) then
+            callback(tonumber(val))
+        else
+            callback(val)
+        end
+    end)
 end
 
 -- ==========================================
--- 1. 🏄 ĐI TRÊN MẶT NƯỚC (ĐÃ FIX HOÀN TOÀN)
+-- 1. 🏄 ĐI TRÊN MẶT NƯỚC
 -- ==========================================
 local waterWalkEnabled = false
 local antiSinkPart = nil
 local antiSinkConn = nil
-local waterCheckConn = nil
 
 local function enableWaterWalk()
-	if not antiSinkPart then
-		antiSinkPart = Instance.new("Part")
-		antiSinkPart.Name = "NghiaSenpai_AntiSinkPlatform"
-		antiSinkPart.Size = Vector3.new(100, 5, 100)
-		antiSinkPart.Anchored = true
-		antiSinkPart.CanCollide = true
-		antiSinkPart.Transparency = 0.7
-		antiSinkPart.Color = Color3.fromRGB(0, 150, 255)
-		antiSinkPart.Material = Enum.Material.Ice
-		antiSinkPart.Parent = workspace
-	end
-	
-	if antiSinkConn then
-		antiSinkConn:Disconnect()
-		antiSinkConn = nil
-	end
-	
-	antiSinkConn = RunService.RenderStepped:Connect(function()
-		pcall(function()
-			local char = LocalPlayer.Character
-			local root = char and (char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart)
-			local hum = char and char:FindFirstChildOfClass("Humanoid")
-			
-			if root and antiSinkPart then
-				local pos = root.Position
-				
-				local waterY = nil
-				pcall(function()
-					waterY = workspace.Terrain:GetWaterHeight(pos)
-				end)
-				
-				if not waterY or waterY < -500 then
-					for _, obj in ipairs(workspace:GetDescendants()) do
-						if obj:IsA("BasePart") and obj.Name:lower():find("water") or (obj:IsA("BasePart") and obj.Material == Enum.Material.Water) then
-							if (obj.Position - Vector3.new(pos.X, obj.Position.Y, pos.Z)).Magnitude < 50 then
-								waterY = obj.Position.Y + obj.Size.Y / 2
-								break
-							end
-						end
-					end
-				end
-				
-				if waterY and waterY > -500 then
-					antiSinkPart.Position = Vector3.new(pos.X, waterY, pos.Z)
-					antiSinkPart.CanCollide = true
-					
-					if hum then
-						hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
-					end
-				else
-					antiSinkPart.Position = Vector3.new(0, -200, 0)
-					antiSinkPart.CanCollide = false
-					
-					if hum then
-						hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
-					end
-				end
-			end
-		end)
-	end)
+    if not antiSinkPart then
+        antiSinkPart = Instance.new("Part")
+        antiSinkPart.Name = "NghiaSenpai_AntiSinkPlatform"
+        antiSinkPart.Size = Vector3.new(50, 3, 50)
+        antiSinkPart.Anchored = true
+        antiSinkPart.CanCollide = true
+        antiSinkPart.Transparency = 0.8
+        antiSinkPart.Color = Color3.fromRGB(0, 150, 255)
+        antiSinkPart.Material = Enum.Material.Ice
+        antiSinkPart.Parent = workspace
+    end
+    
+    if antiSinkConn then
+        antiSinkConn:Disconnect()
+        antiSinkConn = nil
+    end
+    
+    antiSinkConn = RunService.Stepped:Connect(function()
+        pcall(function()
+            local char = LocalPlayer.Character
+            local root = char and (char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart)
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            
+            if root and antiSinkPart then
+                local pos = root.Position
+                
+                local waterY = nil
+                pcall(function()
+                    waterY = workspace.Terrain:GetWaterHeight(pos)
+                end)
+                
+                if waterY and waterY > -500 then
+                    antiSinkPart.Position = Vector3.new(pos.X, waterY - 1, pos.Z)
+                    antiSinkPart.CanCollide = true
+                    
+                    if hum then
+                        hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
+                    end
+                else
+                    antiSinkPart.Position = Vector3.new(0, -200, 0)
+                    antiSinkPart.CanCollide = false
+                    
+                    if hum then
+                        hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
+                    end
+                end
+            end
+        end)
+    end)
 end
 
 local function disableWaterWalk()
-	if antiSinkConn then
-		antiSinkConn:Disconnect()
-		antiSinkConn = nil
-	end
-	if antiSinkPart then
-		antiSinkPart:Destroy()
-		antiSinkPart = nil
-	end
-	pcall(function()
-		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then
-			hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
-		end
-	end)
+    if antiSinkConn then
+        antiSinkConn:Disconnect()
+        antiSinkConn = nil
+    end
+    if antiSinkPart then
+        antiSinkPart:Destroy()
+        antiSinkPart = nil
+    end
+    pcall(function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
+        end
+    end)
 end
 
 AddToggle("🏄 Đi Trên Mặt Nước", function(state)
-	waterWalkEnabled = state
-	if state then
-		enableWaterWalk()
-	else
-		disableWaterWalk()
-	end
+    waterWalkEnabled = state
+    if state then
+        enableWaterWalk()
+    else
+        disableWaterWalk()
+    end
 end)
 
 -- ==========================================
--- 2. 👑 ESP (ĐÃ FIX TẮT HOÀN TOÀN)
+-- 2. 💾 LƯU VỊ TRÍ & TELEPORT
 -- ==========================================
-local rareESP = false
+local savedPosition = nil
+
+AddButton("💾 Lưu Vị Trí Hiện Tại", Color3.fromRGB(0, 150, 200), function()
+    pcall(function()
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            savedPosition = root.CFrame
+            print("[Lưu Vị Trí] Đã lưu vị trí: " .. tostring(root.Position))
+        end
+    end)
+end)
+
+AddButton("📍 Teleport Đến Vị Trí Đã Lưu", Color3.fromRGB(0, 200, 100), function()
+    pcall(function()
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root and savedPosition then
+            root.CFrame = savedPosition
+            print("[Teleport] Đã dịch chuyển đến vị trí đã lưu!")
+        else
+            print("[Teleport] Chưa có vị trí nào được lưu!")
+        end
+    end)
+end)
+
+-- ==========================================
+-- 3. 👑 ESP ĐỊNH VỊ (BOSS VÀNG - MYTHICAL ĐỎ - DIVINE CAM)
+-- ==========================================
 local espEnabled = false
 local espCache = {}
 local espUpdateConn = nil
 
 local function getRarityInfo(target)
-	local fullStr = target.Name:lower()
-	local parentName = target.Parent and target.Parent.Name:lower() or ""
-	
-	if fullStr:find("divine") or parentName:find("divine") then return "DIVINE", Color3.fromRGB(255, 215, 0) end
-	if fullStr:find("mythic") or fullStr:find("mythical") or parentName:find("mythic") or parentName:find("mythical") then return "MYTHICAL", Color3.fromRGB(180, 50, 255) end
-	if fullStr:find("boss") or parentName:find("boss") then return "BOSS", Color3.fromRGB(255, 30, 30) end
-	if fullStr:find("secret") or parentName:find("secret") then return "SECRET", Color3.fromRGB(255, 0, 128) end
-	if fullStr:find("legendary") or parentName:find("legendary") then return "LEGENDARY", Color3.fromRGB(255, 140, 0) end
-	return nil, nil
+    local fullStr = target.Name:lower()
+    local parentName = target.Parent and target.Parent.Name:lower() or ""
+    
+    -- Kiểm tra Divine trước (ưu tiên cao nhất)
+    if fullStr:find("divine") or parentName:find("divine") then 
+        return "DIVINE", Color3.fromRGB(255, 140, 0) -- Cam
+    end
+    
+    -- Kiểm tra Mythical
+    if fullStr:find("mythic") or fullStr:find("mythical") or parentName:find("mythic") or parentName:find("mythical") then 
+        return "MYTHICAL", Color3.fromRGB(255, 0, 0) -- Đỏ
+    end
+    
+    -- Kiểm tra Boss
+    if fullStr:find("boss") or parentName:find("boss") then 
+        return "BOSS", Color3.fromRGB(255, 255, 0) -- Vàng
+    end
+    
+    -- Kiểm tra Secret
+    if fullStr:find("secret") or parentName:find("secret") then 
+        return "SECRET", Color3.fromRGB(255, 0, 128) -- Hồng
+    end
+    
+    -- Kiểm tra Legendary
+    if fullStr:find("legendary") or parentName:find("legendary") then 
+        return "LEGENDARY", Color3.fromRGB(255, 140, 0) -- Cam
+    end
+    
+    return nil, nil
 end
 
 local function clearAllESP()
-	for item, espData in pairs(espCache) do
-		if espData.Highlight then
-			pcall(function() espData.Highlight:Destroy() end)
-		end
-		if espData.Billboard then
-			pcall(function() espData.Billboard:Destroy() end)
-		end
-	end
-	espCache = {}
+    for item, espData in pairs(espCache) do
+        if espData.Highlight then
+            pcall(function() espData.Highlight:Destroy() end)
+        end
+        if espData.Billboard then
+            pcall(function() espData.Billboard:Destroy() end)
+        end
+    end
+    espCache = {}
 end
 
-local function applyIslandESP(item)
-	if not item or item == LocalPlayer.Character or item:IsDescendantOf(LocalPlayer.Character) then return end
-	if Players:GetPlayerFromCharacter(item) then return end
-	if not (item:IsA("Model") or item:IsA("BasePart")) then return end
+local function applyESP(item)
+    if not item or item == LocalPlayer.Character or item:IsDescendantOf(LocalPlayer.Character) then return end
+    if Players:GetPlayerFromCharacter(item) then return end
+    if not (item:IsA("Model") or item:IsA("BasePart")) then return end
 
-	local rootPart = item:IsA("Model") and (item.PrimaryPart or item:FindFirstChild("HumanoidRootPart") or item:FindFirstChildOfClass("BasePart")) or item
-	if not rootPart then return end
+    local rootPart = item:IsA("Model") and (item.PrimaryPart or item:FindFirstChild("HumanoidRootPart") or item:FindFirstChildOfClass("BasePart")) or item
+    if not rootPart then return end
 
-	local rareType, rareColor = getRarityInfo(item)
-	local isRare = rareType ~= nil
-	local shouldShow = (isRare and rareESP) or (not isRare and espEnabled)
-	
-	if not shouldShow then return end
+    local rareType, rareColor = getRarityInfo(item)
+    if not rareType then return end
 
-	if espCache[item] then return end
+    if espCache[item] then return end
 
-	local tagColor = rareColor or Color3.fromRGB(0, 255, 150)
-	local tagTitle = isRare and ("[" .. rareType .. "]\n" .. item.Name) or item.Name
+    local tagTitle = "[" .. rareType .. "]\n" .. item.Name
 
-	local hl = Instance.new("Highlight")
-	hl.FillColor = tagColor
-	hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-	hl.FillTransparency = 0.4
-	hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	hl.Parent = item
+    local hl = Instance.new("Highlight")
+    hl.FillColor = rareColor
+    hl.OutlineColor = rareColor
+    hl.FillTransparency = 0.3
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = item
 
-	local bgui = Instance.new("BillboardGui")
-	bgui.Size = UDim2.new(0, 200, 0, 40)
-	bgui.AlwaysOnTop = true
-	bgui.MaxDistance = 500
-	bgui.Parent = rootPart
+    local bgui = Instance.new("BillboardGui")
+    bgui.Size = UDim2.new(0, 250, 0, 50)
+    bgui.AlwaysOnTop = true
+    bgui.MaxDistance = 1000
+    bgui.Parent = rootPart
 
-	local textLbl = Instance.new("TextLabel", bgui)
-	textLbl.Size = UDim2.new(1, 0, 1, 0)
-	textLbl.BackgroundTransparency = 1
-	textLbl.Font = Enum.Font.GothamBold
-	textLbl.TextSize = 12
-	textLbl.TextColor3 = tagColor
-	textLbl.TextStrokeTransparency = 0.2
-	textLbl.Text = tagTitle
+    local textLbl = Instance.new("TextLabel", bgui)
+    textLbl.Size = UDim2.new(1, 0, 1, 0)
+    textLbl.BackgroundTransparency = 1
+    textLbl.Font = Enum.Font.GothamBold
+    textLbl.TextSize = 14
+    textLbl.TextColor3 = rareColor
+    textLbl.TextStrokeTransparency = 0
+    textLbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLbl.Text = tagTitle
 
-	espCache[item] = { Highlight = hl, Billboard = bgui }
+    espCache[item] = { Highlight = hl, Billboard = bgui }
+end
+
+local function startESP()
+    if espUpdateConn then
+        espUpdateConn:Disconnect()
+    end
+    
+    espUpdateConn = RunService.Heartbeat:Connect(function()
+        if not espEnabled then return end
+        
+        -- Lấy vị trí người chơi
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        
+        local playerPos = root.Position
+        
+        -- Quét tất cả model trong workspace
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Model") and obj ~= LocalPlayer.Character then
+                local objRoot = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
+                if objRoot then
+                    -- Chỉ hiện ESP cho các con thú gần người chơi (trong phạm vi 500 studs)
+                    local distance = (objRoot.Position - playerPos).Magnitude
+                    if distance < 500 then
+                        applyESP(obj)
+                    end
+                end
+            end
+        end
+    end)
 end
 
 local function stopESP()
-	if espUpdateConn then
-		espUpdateConn:Disconnect()
-		espUpdateConn = nil
-	end
-	clearAllESP()
+    if espUpdateConn then
+        espUpdateConn:Disconnect()
+        espUpdateConn = nil
+    end
+    clearAllESP()
 end
 
-local function startESPUpdate()
-	if espUpdateConn then
-		espUpdateConn:Disconnect()
-	end
-	
-	espUpdateConn = RunService.Heartbeat:Connect(function()
-		if rareESP or espEnabled then
-			local models = {}
-			for _, obj in ipairs(workspace:GetDescendants()) do
-				if obj:IsA("Model") and #models < 100 then
-					table.insert(models, obj)
-				end
-				if #models >= 100 then break end
-			end
-			
-			for _, obj in ipairs(models) do
-				applyIslandESP(obj)
-			end
-		end
-	end)
-end
-
-AddToggle("👑 ESP BOSS - Divine & Mythical", function(state)
-	rareESP = state
-	if state then
-		startESPUpdate()
-	elseif not espEnabled then
-		stopESP()
-	end
-end)
-
-AddToggle("✨ ESP Thường", function(state)
-	espEnabled = state
-	if state then
-		startESPUpdate()
-	elseif not rareESP then
-		stopESP()
-	end
+AddToggle("👑 ESP Định Vị (Boss Vàng | Mythical Đỏ | Divine Cam)", function(state)
+    espEnabled = state
+    if state then
+        startESP()
+    else
+        stopESP()
+    end
 end)
 
 -- ==========================================
--- 3. 🖱️ AUTO CLICK (SIÊU NHANH)
+-- 4. 🖱️ AUTO CLICK
 -- ==========================================
 local autoClicker = false
 local autoClickInterval = 0.1
 
 local function startAutoClick()
-	task.spawn(function()
-		while autoClicker do
-			pcall(function()
-				local cam = workspace.CurrentCamera
-				if cam then
-					local clickX = cam.ViewportSize.X * 0.85
-					local clickY = cam.ViewportSize.Y * 0.5
-					VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
-					VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-				end
-			end)
-			task.wait(autoClickInterval)
-		end
-	end)
+    task.spawn(function()
+        while autoClicker do
+            pcall(function()
+                local cam = workspace.CurrentCamera
+                if cam then
+                    local clickX = cam.ViewportSize.X * 0.85
+                    local clickY = cam.ViewportSize.Y * 0.5
+                    VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
+                    VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+                end
+            end)
+            task.wait(autoClickInterval)
+        end
+    end)
 end
 
 local autoClickToggle = AddToggle("🖱️ Auto Click (Ấn Y, Siêu Nhanh)", function(state)
-	autoClicker = state
-	if state then
-		startAutoClick()
-	end
+    autoClicker = state
+    if state then
+        startAutoClick()
+    end
 end)
 
 UserInputService.InputBegan:Connect(function(input, gpe)
-	if not gpe and input.KeyCode == Enum.KeyCode.Y then
-		autoClickToggle.SetState(not autoClickToggle.GetState())
-	end
+    if not gpe and input.KeyCode == Enum.KeyCode.Y then
+        autoClickToggle.SetState(not autoClickToggle.GetState())
+    end
 end)
 
 -- ==========================================
--- 4. 🏃 TỐC ĐỘ & NHẢY CAO
+-- 5. 🏃 TỐC ĐỘ & NHẢY CAO
 -- ==========================================
 local walkSpeedVal = 50 * SPEED_MULTIPLIER
 local speedEnabled = false
 
 local function applyWalkSpeed()
-	local char = LocalPlayer.Character
-	local hum = char and char:FindFirstChildOfClass("Humanoid")
-	if hum then
-		hum.WalkSpeed = speedEnabled and walkSpeedVal or 16
-	end
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = speedEnabled and walkSpeedVal or 16
+    end
 end
 
 AddToggle("🏃 Chạy Nhanh", function(state)
-	speedEnabled = state
-	applyWalkSpeed()
+    speedEnabled = state
+    applyWalkSpeed()
 end)
 
 AddInput("⚙️ Giá Trị Tốc Độ:", walkSpeedVal, function(v)
-	walkSpeedVal = tonumber(v) or 150
-	if speedEnabled then
-		applyWalkSpeed()
-	end
+    walkSpeedVal = tonumber(v) or 150
+    if speedEnabled then
+        applyWalkSpeed()
+    end
 end)
 
 LocalPlayer.CharacterAdded:Connect(function(newChar)
-	newChar:WaitForChild("Humanoid")
-	task.wait(0.5)
-	if speedEnabled then
-		applyWalkSpeed()
-	end
+    newChar:WaitForChild("Humanoid")
+    task.wait(0.5)
+    if speedEnabled then
+        applyWalkSpeed()
+    end
 end)
 
 local jumpPowerVal = 120 * SPEED_MULTIPLIER
@@ -479,590 +498,319 @@ local jumpEnabled = false
 local infiniteJumpConnection = nil
 
 AddToggle("🦘 Nhảy Cao", function(state)
-	jumpEnabled = state
-	if jumpEnabled then
-		if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
-		infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
-			if jumpEnabled then
-				pcall(function()
-					local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if root then
-						root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, jumpPowerVal, root.AssemblyLinearVelocity.Z)
-					end
-				end)
-			end
-		end)
-	else
-		if infiniteJumpConnection then infiniteJumpConnection:Disconnect() infiniteJumpConnection = nil end
-	end
+    jumpEnabled = state
+    if jumpEnabled then
+        if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
+        infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+            if jumpEnabled then
+                pcall(function()
+                    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, jumpPowerVal, root.AssemblyLinearVelocity.Z)
+                    end
+                end)
+            end
+        end)
+    else
+        if infiniteJumpConnection then infiniteJumpConnection:Disconnect() infiniteJumpConnection = nil end
+    end
 end)
 
 -- ==========================================
--- 5. 🚀 DASH & TELEPORT
+-- 6. 🚀 DASH & TELEPORT
 -- ==========================================
 local dashEnabled = false
 local dashDistance = 30 * SPEED_MULTIPLIER
 AddToggle("⚡ Lướt Nhanh Phím Q", function(state)
-	dashEnabled = state
+    dashEnabled = state
 end)
 
 UserInputService.InputBegan:Connect(function(input, gpe)
-	if not gpe and dashEnabled and input.KeyCode == Enum.KeyCode.Q then
-		pcall(function()
-			local char = LocalPlayer.Character
-			local root = char and char:FindFirstChild("HumanoidRootPart")
-			local cam = workspace.CurrentCamera
-			if root and cam then
-				local lookVec = cam.CFrame.LookVector
-				local flatLook = Vector3.new(lookVec.X, 0, lookVec.Z).Unit
-				root.CFrame = root.CFrame + (flatLook * dashDistance)
-			end
-		end)
-	end
+    if not gpe and dashEnabled and input.KeyCode == Enum.KeyCode.Q then
+        pcall(function()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local cam = workspace.CurrentCamera
+            if root and cam then
+                local lookVec = cam.CFrame.LookVector
+                local flatLook = Vector3.new(lookVec.X, 0, lookVec.Z).Unit
+                root.CFrame = root.CFrame + (flatLook * dashDistance)
+            end
+        end)
+    end
 end)
 
 local tpKeyEnabled = false
 local tpStepDist = 25 * SPEED_MULTIPLIER
 AddToggle("🎯 Dịch Chuyển Phím T", function(state)
-	tpKeyEnabled = state
+    tpKeyEnabled = state
 end)
 
 UserInputService.InputBegan:Connect(function(input, gpe)
-	if not gpe and tpKeyEnabled and input.KeyCode == Enum.KeyCode.T then
-		pcall(function()
-			local char = LocalPlayer.Character
-			local root = char and char:FindFirstChild("HumanoidRootPart")
-			local cam = workspace.CurrentCamera
-			if root and cam then
-				root.CFrame = root.CFrame + (cam.CFrame.LookVector * tpStepDist)
-			end
-		end)
-	end
+    if not gpe and tpKeyEnabled and input.KeyCode == Enum.KeyCode.T then
+        pcall(function()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local cam = workspace.CurrentCamera
+            if root and cam then
+                root.CFrame = root.CFrame + (cam.CFrame.LookVector * tpStepDist)
+            end
+        end)
+    end
 end)
 
 -- ==========================================
--- 6. 🏝️ BAY ĐẾN ĐẢO (FIX BAY ĐẾN ĐẢO CHÍNH XÁC)
+-- 7. 🏝️ BAY ĐẾN ĐẢO
 -- ==========================================
 local islandFlySpeed = 250 * SPEED_MULTIPLIER
 local isFlyingToIsland = false
 local currentFlyTween = nil
-local landingConnection = nil
-local antiFallConnection = nil
 local landingPlatform = nil
-local flyBodyVelocity = nil
-local flyBodyGyro = nil
-local smoothFlyConnection = nil
 
--- Hàm tìm đảo theo tên hiển thị
 local function findIslandByName(islandName)
-	local searchName = islandName:lower()
-	local foundPositions = {}
-	
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		pcall(function()
-			if obj.Name:lower():find(searchName) or (obj.Parent and obj.Parent.Name:lower():find(searchName)) then
-				if obj:IsA("BasePart") then
-					table.insert(foundPositions, obj.Position)
-				elseif obj:IsA("Model") then
-					local primaryPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildOfClass("BasePart")
-					if primaryPart then
-						table.insert(foundPositions, primaryPart.Position)
-					end
-				end
-			end
-			
-			if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-				local text = obj.Text:lower()
-				if text:find(searchName) then
-					local parent = obj.Parent
-					while parent and not parent:IsA("BasePart") and not parent:IsA("Model") do
-						parent = parent.Parent
-					end
-					if parent then
-						if parent:IsA("BasePart") then
-							table.insert(foundPositions, parent.Position)
-						elseif parent:IsA("Model") then
-							local primaryPart = parent.PrimaryPart or parent:FindFirstChild("HumanoidRootPart") or parent:FindFirstChildOfClass("BasePart")
-							if primaryPart then
-								table.insert(foundPositions, primaryPart.Position)
-							end
-						end
-					end
-				end
-			end
-		end)
-	end
-	
-	if #foundPositions > 0 then
-		local centerPos = Vector3.new(0, 0, 0)
-		for _, pos in ipairs(foundPositions) do
-			centerPos = centerPos + pos
-		end
-		centerPos = centerPos / #foundPositions
-		
-		print("[Island] Tìm thấy " .. islandName .. " tại vị trí: " .. tostring(centerPos))
-		return centerPos
-	end
-	
-	return nil
+    local searchName = islandName:lower()
+    local foundPositions = {}
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            if obj.Name:lower():find(searchName) or (obj.Parent and obj.Parent.Name:lower():find(searchName)) then
+                if obj:IsA("BasePart") then
+                    table.insert(foundPositions, obj.Position)
+                elseif obj:IsA("Model") then
+                    local primaryPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildOfClass("BasePart")
+                    if primaryPart then
+                        table.insert(foundPositions, primaryPart.Position)
+                    end
+                end
+            end
+        end)
+    end
+    
+    if #foundPositions > 0 then
+        local centerPos = Vector3.new(0, 0, 0)
+        for _, pos in ipairs(foundPositions) do
+            centerPos = centerPos + pos
+        end
+        centerPos = centerPos / #foundPositions
+        return centerPos
+    end
+    return nil
 end
 
--- Hàm tìm đảo theo tên model
 local function findIslandByModelName(islandName)
-	local searchNames = {}
-	local baseName = islandName:lower():gsub(" island", ""):gsub("island", "")
-	
-	table.insert(searchNames, islandName:lower())
-	table.insert(searchNames, baseName)
-	table.insert(searchNames, baseName .. " island")
-	table.insert(searchNames, baseName .. "island")
-	table.insert(searchNames, baseName:gsub(" ", ""))
-	
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Model") then
-			local objName = obj.Name:lower()
-			for _, searchName in ipairs(searchNames) do
-				if objName:find(searchName) then
-					local primaryPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildOfClass("BasePart")
-					if primaryPart then
-						print("[Island] Tìm thấy model " .. islandName .. ": " .. obj.Name)
-						return primaryPart.Position
-					end
-				end
-			end
-		end
-	end
-	
-	return nil
+    local searchNames = {}
+    local baseName = islandName:lower():gsub(" island", ""):gsub("island", "")
+    
+    table.insert(searchNames, islandName:lower())
+    table.insert(searchNames, baseName)
+    table.insert(searchNames, baseName .. " island")
+    table.insert(searchNames, baseName .. "island")
+    table.insert(searchNames, baseName:gsub(" ", ""))
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") then
+            local objName = obj.Name:lower()
+            for _, searchName in ipairs(searchNames) do
+                if objName:find(searchName) then
+                    local primaryPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildOfClass("BasePart")
+                    if primaryPart then
+                        return primaryPart.Position
+                    end
+                end
+            end
+        end
+    end
+    return nil
 end
 
--- Hàm tìm đảo tổng hợp
 local function findIslandSmart(islandName)
-	print("[Island] Đang tìm đảo: " .. islandName)
-	
-	local pos1 = findIslandByName(islandName)
-	if pos1 then
-		return pos1
-	end
-	
-	local pos2 = findIslandByModelName(islandName)
-	if pos2 then
-		return pos2
-	end
-	
-	print("[Island] Không tìm thấy " .. islandName .. ", đang debug...")
-	debugPrintAllIslands()
-	
-	return nil
+    local pos1 = findIslandByName(islandName)
+    if pos1 then return pos1 end
+    
+    local pos2 = findIslandByModelName(islandName)
+    if pos2 then return pos2 end
+    
+    return nil
 end
 
--- Debug in ra tất cả các đảo
-local function debugPrintAllIslands()
-	print("=== TẤT CẢ CÁC MODEL LỚN TRONG WORKSPACE ===")
-	local islands = {}
-	
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Model") and obj ~= LocalPlayer.Character then
-			local primaryPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildOfClass("BasePart")
-			if primaryPart then
-				local size = obj:GetExtentsSize()
-				if size.X > 30 and size.Z > 30 then
-					table.insert(islands, {
-						Name = obj.Name,
-						Position = primaryPart.Position,
-						Size = size
-					})
-				end
-			end
-		end
-	end
-	
-	table.sort(islands, function(a, b)
-		return (a.Size.X * a.Size.Z) > (b.Size.X * b.Size.Z)
-	end)
-	
-	for i, island in ipairs(islands) do
-		print(string.format("%d. %s | Kích thước: %.0fx%.0f | Vị trí: %s", 
-			i, island.Name, island.Size.X, island.Size.Z, tostring(island.Position)))
-	end
-	print("=== KẾT THÚC DEBUG ===")
+local function findDragonIslandGround(targetPos)
+    local groundParts = {}
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.CanCollide then
+            local objName = obj.Name:lower()
+            
+            if objName:find("dragon") or objName:find("bone") or objName:find("skeleton") or objName:find("skull") or objName:find("rib") then
+                if obj.Position.Y > 100 then
+                    table.insert(groundParts, obj)
+                end
+            end
+        end
+    end
+    
+    if #groundParts > 0 then
+        local highestPart = groundParts[1]
+        for _, part in ipairs(groundParts) do
+            if part.Position.Y > highestPart.Position.Y then
+                highestPart = part
+            end
+        end
+        
+        local groundY = highestPart.Position.Y + highestPart.Size.Y / 2
+        return Vector3.new(highestPart.Position.X, groundY, highestPart.Position.Z)
+    end
+    
+    local rayOrigin = targetPos + Vector3.new(0, 500, 0)
+    local rayDirection = Vector3.new(0, -1000, 0)
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+    
+    if raycastResult then
+        return Vector3.new(targetPos.X, raycastResult.Position.Y, targetPos.Z)
+    end
+    
+    return targetPos
 end
 
--- Hàm tìm vị trí bộ xương trên đảo rồng
-local function findDragonSkeletonPosition(targetPos)
-	print("[Dragon Island] Đang tìm vị trí bộ xương trên đảo rồng...")
-	
-	local skeletonParts = {}
-	
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		pcall(function()
-			local objName = obj.Name:lower()
-			
-			if objName:find("bone") or objName:find("skeleton") or objName:find("skull") or objName:find("rib") or objName:find("xương") or objName:find("xuong") then
-				if obj:IsA("BasePart") then
-					if obj.Position.Y > 100 then
-						table.insert(skeletonParts, obj)
-					end
-				elseif obj:IsA("Model") then
-					local primaryPart = obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
-					if primaryPart and primaryPart.Position.Y > 100 then
-						table.insert(skeletonParts, primaryPart)
-					end
-				end
-			end
-		end)
-	end
-	
-	if #skeletonParts > 0 then
-		local highestPart = skeletonParts[1]
-		for _, part in ipairs(skeletonParts) do
-			if part.Position.Y > highestPart.Position.Y then
-				highestPart = part
-			end
-		end
-		
-		local skeletonPos = highestPart.Position
-		print("[Dragon Island] Tìm thấy bộ xương tại: " .. highestPart.Name .. " - Vị trí: " .. tostring(skeletonPos))
-		
-		local rayOrigin = skeletonPos + Vector3.new(0, 50, 0)
-		local rayDirection = Vector3.new(0, -200, 0)
-		
-		local raycastParams = RaycastParams.new()
-		raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-		raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-		
-		local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-		
-		if raycastResult then
-			local groundY = raycastResult.Position.Y
-			print("[Dragon Island] Tìm thấy mặt đất dưới bộ xương tại Y = " .. groundY)
-			return Vector3.new(skeletonPos.X, groundY, skeletonPos.Z)
-		else
-			local highestGroundY = -math.huge
-			for _, part in ipairs(workspace:GetDescendants()) do
-				if part:IsA("BasePart") and part.CanCollide then
-					local distX = math.abs(part.Position.X - skeletonPos.X)
-					local distZ = math.abs(part.Position.Z - skeletonPos.Z)
-					
-					if distX < 30 and distZ < 30 then
-						local partTopY = part.Position.Y + part.Size.Y / 2
-						if partTopY > highestGroundY and partTopY < skeletonPos.Y + 50 then
-							highestGroundY = partTopY
-						end
-					end
-				end
-			end
-			
-			if highestGroundY > -math.huge then
-				print("[Dragon Island] Tìm thấy mặt đất gần bộ xương tại Y = " .. highestGroundY)
-				return Vector3.new(skeletonPos.X, highestGroundY, skeletonPos.Z)
-			end
-		end
-	end
-	
-	print("[Dragon Island] Không tìm thấy bộ xương, tìm part cao nhất...")
-	local highestY = -math.huge
-	local highestPart = nil
-	
-	for _, part in ipairs(workspace:GetDescendants()) do
-		if part:IsA("BasePart") and part.CanCollide then
-			local distX = math.abs(part.Position.X - targetPos.X)
-			local distZ = math.abs(part.Position.Z - targetPos.Z)
-			
-			if distX < 200 and distZ < 200 then
-				local partTopY = part.Position.Y + part.Size.Y / 2
-				if partTopY > highestY and partTopY > 100 then
-					highestY = partTopY
-					highestPart = part
-				end
-			end
-		end
-	end
-	
-	if highestPart then
-		print("[Dragon Island] Tìm thấy part cao nhất: " .. highestPart.Name .. " tại Y = " .. highestY)
-		return Vector3.new(highestPart.Position.X, highestY, highestPart.Position.Z)
-	end
-	
-	print("[Dragon Island] Không tìm thấy vị trí, sử dụng vị trí gốc + 100")
-	return targetPos + Vector3.new(0, 100, 0)
-end
-
--- Hàm tìm vị trí mặt đất cho các đảo thường
 local function findGroundPosition(targetPos)
-	local rayOrigin = targetPos + Vector3.new(0, 100, 0)
-	local rayDirection = Vector3.new(0, -500, 0)
-	
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-	raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-	
-	local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-	
-	if raycastResult then
-		local groundY = raycastResult.Position.Y
-		return Vector3.new(targetPos.X, groundY, targetPos.Z)
-	else
-		return targetPos
-	end
+    local rayOrigin = targetPos + Vector3.new(0, 100, 0)
+    local rayDirection = Vector3.new(0, -500, 0)
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+    
+    if raycastResult then
+        return Vector3.new(targetPos.X, raycastResult.Position.Y, targetPos.Z)
+    else
+        return targetPos
+    end
 end
 
--- Hàm tạo platform để đứng
 local function createLandingPlatform(position)
-	if landingPlatform then
-		landingPlatform:Destroy()
-	end
-	
-	landingPlatform = Instance.new("Part")
-	landingPlatform.Name = "NghiaSenpai_LandingPlatform"
-	landingPlatform.Size = Vector3.new(10, 2, 10)
-	landingPlatform.Anchored = true
-	landingPlatform.CanCollide = true
-	landingPlatform.Transparency = 0.5
-	landingPlatform.Color = Color3.fromRGB(0, 255, 0)
-	landingPlatform.Material = Enum.Material.Ice
-	landingPlatform.Position = position
-	landingPlatform.Parent = workspace
-	
-	return landingPlatform
+    if landingPlatform then
+        landingPlatform:Destroy()
+    end
+    
+    landingPlatform = Instance.new("Part")
+    landingPlatform.Name = "NghiaSenpai_LandingPlatform"
+    landingPlatform.Size = Vector3.new(15, 3, 15)
+    landingPlatform.Anchored = true
+    landingPlatform.CanCollide = true
+    landingPlatform.Transparency = 0.5
+    landingPlatform.Color = Color3.fromRGB(0, 255, 0)
+    landingPlatform.Material = Enum.Material.Ice
+    landingPlatform.Position = position
+    landingPlatform.Parent = workspace
+    
+    return landingPlatform
 end
 
--- Hàm xóa platform
 local function removeLandingPlatform()
-	if landingPlatform then
-		landingPlatform:Destroy()
-		landingPlatform = nil
-	end
+    if landingPlatform then
+        landingPlatform:Destroy()
+        landingPlatform = nil
+    end
 end
 
 local function stopFlying()
-	isFlyingToIsland = false
-	if currentFlyTween then
-		currentFlyTween:Cancel()
-		currentFlyTween = nil
-	end
-	if landingConnection then
-		landingConnection:Disconnect()
-		landingConnection = nil
-	end
-	if antiFallConnection then
-		antiFallConnection:Disconnect()
-		antiFallConnection = nil
-	end
-	if smoothFlyConnection then
-		smoothFlyConnection:Disconnect()
-		smoothFlyConnection = nil
-	end
-	if flyBodyVelocity then
-		flyBodyVelocity:Destroy()
-		flyBodyVelocity = nil
-	end
-	if flyBodyGyro then
-		flyBodyGyro:Destroy()
-		flyBodyGyro = nil
-	end
-	local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if root then
-		root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-	end
-	local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-	if hum then
-		hum.PlatformStand = false
-	end
-end
-
--- Hàm bay mượt mà đến vị trí cụ thể
-local function smoothFlyToPosition(targetPosition, onComplete)
-	local char = LocalPlayer.Character
-	local root = char and char:FindFirstChild("HumanoidRootPart")
-	local hum = char and char:FindFirstChildOfClass("Humanoid")
-	
-	if not root or not hum then return end
-	
-	hum.PlatformStand = true
-	
-	-- Xóa BodyVelocity cũ nếu có
-	if flyBodyVelocity then
-		flyBodyVelocity:Destroy()
-		flyBodyVelocity = nil
-	end
-	if flyBodyGyro then
-		flyBodyGyro:Destroy()
-		flyBodyGyro = nil
-	end
-	
-	-- Tạo BodyVelocity để bay mượt
-	flyBodyVelocity = Instance.new("BodyVelocity", root)
-	flyBodyVelocity.Name = "SmoothFlyBV"
-	flyBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-	flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
-	
-	-- Tạo BodyGyro để giữ thăng bằng
-	flyBodyGyro = Instance.new("BodyGyro", root)
-	flyBodyGyro.Name = "SmoothFlyBG"
-	flyBodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-	flyBodyGyro.D = 500
-	flyBodyGyro.P = 10000
-	flyBodyGyro.CFrame = root.CFrame
-	
-	-- Bay mượt mà
-	smoothFlyConnection = RunService.RenderStepped:Connect(function()
-		if not isFlyingToIsland then return end
-		
-		pcall(function()
-			local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if not currentRoot then return end
-			
-			local currentPos = currentRoot.Position
-			local direction = (targetPosition - currentPos)
-			local distance = direction.Magnitude
-			
-			if distance > 5 then
-				-- Tính toán vận tốc mượt mà
-				local speed = math.min(islandFlySpeed, distance * 2)
-				local velocity = direction.Unit * speed
-				
-				-- Làm mượt vận tốc (lerp)
-				flyBodyVelocity.Velocity = flyBodyVelocity.Velocity:Lerp(velocity, 0.1)
-				
-				-- Giữ thăng bằng
-				flyBodyGyro.CFrame = CFrame.lookAt(currentPos, targetPosition)
-			else
-				-- Đã đến gần đích
-				flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
-				
-				-- Dừng connection
-				if smoothFlyConnection then
-					smoothFlyConnection:Disconnect()
-					smoothFlyConnection = nil
-				end
-				
-				-- Xóa BodyVelocity và BodyGyro
-				if flyBodyVelocity then
-					flyBodyVelocity:Destroy()
-					flyBodyVelocity = nil
-				end
-				if flyBodyGyro then
-					flyBodyGyro:Destroy()
-					flyBodyGyro = nil
-				end
-				
-				-- Đặt nhân vật chính xác tại vị trí đích
-				currentRoot.CFrame = CFrame.new(targetPosition)
-				currentRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-				
-				-- Gọi callback khi hoàn thành
-				if onComplete then
-					onComplete()
-				end
-			end
-		end)
-	end)
+    isFlyingToIsland = false
+    if currentFlyTween then
+        currentFlyTween:Cancel()
+        currentFlyTween = nil
+    end
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    end
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+    end
 end
 
 local function flyToPosition(targetPosition, isDragonIsland)
-	local char = LocalPlayer.Character
-	local root = char and char:FindFirstChild("HumanoidRootPart")
-	local hum = char and char:FindFirstChildOfClass("Humanoid")
-	
-	if not root or not hum then return end
-	
-	stopFlying()
-	removeLandingPlatform()
-	isFlyingToIsland = true
-	hum.PlatformStand = true
-	
-	-- Xác định vị trí đích cuối cùng
-	local finalGroundPos
-	if isDragonIsland then
-		finalGroundPos = findDragonSkeletonPosition(targetPosition)
-	else
-		finalGroundPos = findGroundPosition(targetPosition)
-	end
-	
-	print("[Fly] Đích cuối cùng: " .. tostring(finalGroundPos))
-	
-	-- Tạo platform tại vị trí đích
-	local platformPos = Vector3.new(finalGroundPos.X, finalGroundPos.Y + 1, finalGroundPos.Z)
-	createLandingPlatform(platformPos)
-	
-	-- Bay lên cao trước
-	local startPos = root.Position
-	local flyHeight = math.max(startPos.Y, finalGroundPos.Y) + 300
-	local highPoint = Vector3.new(startPos.X, flyHeight, startPos.Z)
-	
-	print("[Fly] Bay lên cao: " .. tostring(highPoint))
-	
-	-- Bay lên cao
-	smoothFlyToPosition(highPoint, function()
-		if not isFlyingToIsland then return end
-		
-		-- Bay ngang đến đảo
-		local targetHigh = Vector3.new(finalGroundPos.X, flyHeight, finalGroundPos.Z)
-		print("[Fly] Bay ngang đến: " .. tostring(targetHigh))
-		
-		smoothFlyToPosition(targetHigh, function()
-			if not isFlyingToIsland then return end
-			
-			-- Hạ xuống platform
-			local finalPos = Vector3.new(finalGroundPos.X, finalGroundPos.Y + 5, finalGroundPos.Z)
-			print("[Fly] Hạ xuống: " .. tostring(finalPos))
-			
-			-- Sử dụng tween để hạ xuống mượt mà
-			local descendDistance = (finalPos - root.Position).Magnitude
-			local descendDuration = math.clamp(descendDistance / 100, 1, 4)
-			
-			local tweenInfo = TweenInfo.new(descendDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-			currentFlyTween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(finalPos)})
-			currentFlyTween:Play()
-			
-			currentFlyTween.Completed:Connect(function()
-				if not isFlyingToIsland then return end
-				
-				-- Chống rơi và lún
-				antiFallConnection = RunService.RenderStepped:Connect(function()
-					if isFlyingToIsland then
-						pcall(function()
-							local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-							if currentRoot and landingPlatform then
-								if currentRoot.Position.Y < landingPlatform.Position.Y + 1 then
-									currentRoot.CFrame = CFrame.new(Vector3.new(currentRoot.Position.X, landingPlatform.Position.Y + 3, currentRoot.Position.Z))
-									currentRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-								end
-							end
-						end)
-					end
-				end)
-				
-				stopFlying()
-				
-				-- Đảm bảo nhân vật ở đúng vị trí
-				task.wait(0.5)
-				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and landingPlatform then
-					local finalRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					finalRoot.CFrame = CFrame.new(Vector3.new(finalGroundPos.X, finalGroundPos.Y + 5, finalGroundPos.Z))
-					finalRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-					
-					-- Xóa platform sau 3 giây
-					task.delay(3, function()
-						removeLandingPlatform()
-					end)
-				end
-			end)
-		end)
-	end)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    removeLandingPlatform()
+    isFlyingToIsland = true
+    hum.PlatformStand = true
+    
+    local finalGroundPos
+    if isDragonIsland then
+        finalGroundPos = findDragonIslandGround(targetPosition)
+    else
+        finalGroundPos = findGroundPosition(targetPosition)
+    end
+    
+    local platformPos = Vector3.new(finalGroundPos.X, finalGroundPos.Y + 1, finalGroundPos.Z)
+    createLandingPlatform(platformPos)
+    
+    local startPos = root.Position
+    local flyHeight = math.max(startPos.Y, finalGroundPos.Y) + 200
+    local highPoint = Vector3.new(startPos.X, flyHeight, startPos.Z)
+    local targetHigh = Vector3.new(finalGroundPos.X, flyHeight, finalGroundPos.Z)
+    local finalPos = Vector3.new(finalGroundPos.X, finalGroundPos.Y + 5, finalGroundPos.Z)
+    
+    local tween1 = TweenService:Create(root, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = CFrame.new(highPoint)})
+    tween1:Play()
+    
+    tween1.Completed:Connect(function()
+        if not isFlyingToIsland then return end
+        
+        local distance = (targetHigh - highPoint).Magnitude
+        local duration = math.clamp(distance / islandFlySpeed, 1, 5)
+        
+        local tween2 = TweenService:Create(root, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetHigh)})
+        tween2:Play()
+        
+        tween2.Completed:Connect(function()
+            if not isFlyingToIsland then return end
+            
+            local tween3 = TweenService:Create(root, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = CFrame.new(finalPos)})
+            tween3:Play()
+            
+            tween3.Completed:Connect(function()
+                if not isFlyingToIsland then return end
+                
+                stopFlying()
+                
+                task.wait(0.5)
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and landingPlatform then
+                    local finalRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    finalRoot.CFrame = CFrame.new(finalPos)
+                    finalRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    
+                    task.delay(3, function()
+                        removeLandingPlatform()
+                    end)
+                end
+            end)
+        end)
+    end)
 end
 
 local islandList = {
-	{Name = "Bee Island", SearchNames = {"bee", "beeisland", "bee island"}, IsDragon = false},
-	{Name = "Cave Island", SearchNames = {"cave", "caveisland", "cave island"}, IsDragon = false},
-	{Name = "Safari Island", SearchNames = {"safari", "safariisland", "safari island"}, IsDragon = false},
-	{Name = "Volcano Island", SearchNames = {"volcano", "volcanoisland", "volcano island"}, IsDragon = false},
-	{Name = "Forgotten Depths", SearchNames = {"forgotten", "forgottendepths", "forgotten depths"}, IsDragon = false},
-	{Name = "Lost Docks", SearchNames = {"lost docks", "lostdocks", "docks"}, IsDragon = false},
-	{Name = "Sunken Island", SearchNames = {"sunken", "sunkenisland", "sunken island"}, IsDragon = false},
-	{Name = "Dragon Island", SearchNames = {"dragon", "dragonisland", "dragon island"}, IsDragon = true},
-	{Name = "Plushie Island", SearchNames = {"plushie", "plushieisland", "plushie island", "plush"}, IsDragon = false},
+    {Name = "Bee Island", IsDragon = false},
+    {Name = "Cave Island", IsDragon = false},
+    {Name = "Safari Island", IsDragon = false},
+    {Name = "Volcano Island", IsDragon = false},
+    {Name = "Forgotten Depths", IsDragon = false},
+    {Name = "Lost Docks", IsDragon = false},
+    {Name = "Sunken Island", IsDragon = false},
+    {Name = "Dragon Island", IsDragon = true},
+    {Name = "Plushie Island", IsDragon = false},
 }
 
 local islandTitle = Instance.new("TextLabel", Container)
@@ -1075,117 +823,19 @@ islandTitle.TextSize = 12
 islandTitle.TextXAlignment = Enum.TextXAlignment.Left
 
 for _, island in ipairs(islandList) do
-	AddButton("🚁 " .. island.Name, Color3.fromRGB(0, 150, 130), function()
-		pcall(function()
-			local targetPos = findIslandSmart(island.Name)
-			if targetPos then
-				print("[NghiaSenpai] Bay đến " .. island.Name .. " tại vị trí: " .. tostring(targetPos))
-				flyToPosition(targetPos, island.IsDragon)
-			else
-				print("[NghiaSenpai] Không tìm thấy: " .. island.Name)
-				warn("[NghiaSenpai] Hãy mở Output (F9) để xem danh sách các đảo và tìm tên chính xác")
-			end
-		end)
-	end)
+    AddButton("🚁 " .. island.Name, Color3.fromRGB(0, 150, 130), function()
+        pcall(function()
+            local targetPos = findIslandSmart(island.Name)
+            if targetPos then
+                flyToPosition(targetPos, island.IsDragon)
+            end
+        end)
+    end)
 end
 
 AddButton("🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
-	stopFlying()
-	removeLandingPlatform()
-end)
-
-AddButton("🔍 Debug Tất Cả Đảo", Color3.fromRGB(100, 100, 200), function()
-	debugPrintAllIslands()
-end)
-
--- ==========================================
--- 7. 👫 TELEPORT ĐẾN NGƯỜI CHƠI
--- ==========================================
-local selectedTargetPlayer = nil
-
-local dropdownFrame = Instance.new("Frame", Container)
-dropdownFrame.Size = UDim2.new(1, 0, 0, 32)
-dropdownFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0, 6)
-
-local dropdownBtn = Instance.new("TextButton", dropdownFrame)
-dropdownBtn.Size = UDim2.new(1, 0, 1, 0)
-dropdownBtn.BackgroundTransparency = 1
-dropdownBtn.Text = "👤 Chọn Người Chơi"
-dropdownBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-dropdownBtn.Font = Enum.Font.GothamSemibold
-dropdownBtn.TextSize = 11
-
-local listContainer = Instance.new("ScrollingFrame", ScreenGui)
-listContainer.Size = UDim2.new(0, 280, 0, 0)
-listContainer.Position = UDim2.new(0.5, -140, 0.5, -200)
-listContainer.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
-listContainer.BorderSizePixel = 0
-listContainer.Visible = false
-listContainer.ScrollBarThickness = 3
-listContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-listContainer.ZIndex = 1000
-Instance.new("UICorner", listContainer).CornerRadius = UDim.new(0, 6)
-
-local listLayout = Instance.new("UIListLayout", listContainer)
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Padding = UDim.new(0, 3)
-
-local function updatePlayerList()
-	for _, child in ipairs(listContainer:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
-	end
-
-	local count = 0
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer then
-			count = count + 1
-			local pBtn = Instance.new("TextButton", listContainer)
-			pBtn.Size = UDim2.new(1, 0, 0, 28)
-			pBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-			pBtn.Text = " ➔ " .. p.Name
-			pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-			pBtn.Font = Enum.Font.Gotham
-			pBtn.TextSize = 11
-			pBtn.TextXAlignment = Enum.TextXAlignment.Left
-			pBtn.ZIndex = 1001
-			Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 4)
-
-			pBtn.MouseButton1Click:Connect(function()
-				selectedTargetPlayer = p
-				dropdownBtn.Text = "👤 Đã chọn: " .. p.Name
-				dropdownBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
-				listContainer.Visible = false
-				listContainer.Size = UDim2.new(0, 280, 0, 0)
-			end)
-		end
-	end
-	
-	listContainer.Size = UDim2.new(0, 280, 0, math.clamp(count * 31, 0, 300))
-end
-
-dropdownBtn.MouseButton1Click:Connect(function()
-	if listContainer.Visible then
-		listContainer.Visible = false
-		listContainer.Size = UDim2.new(0, 280, 0, 0)
-	else
-		updatePlayerList()
-		listContainer.Visible = true
-	end
-end)
-
-AddButton("🚀 Dịch Chuyển Đến Người", Color3.fromRGB(0, 140, 220), function()
-	pcall(function()
-		if selectedTargetPlayer and selectedTargetPlayer.Character and selectedTargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-			local myChar = LocalPlayer.Character
-			local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-			if myRoot then
-				myRoot.CFrame = selectedTargetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-			end
-		end
-	end)
+    stopFlying()
+    removeLandingPlatform()
 end)
 
 -- ==========================================
@@ -1198,53 +848,53 @@ local flyBodyVelocity2 = nil
 local flyBodyGyro2 = nil
 
 AddToggle("🕊️ Chức Năng Bay (Siêu Mượt)", function(state)
-	isFlying = state
-	local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-	if not root or not hum then return end
+    isFlying = state
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if not root or not hum then return end
 
-	if state then
-		hum.PlatformStand = true
-		
-		flyBodyVelocity2 = Instance.new("BodyVelocity", root)
-		flyBodyVelocity2.Name = "OptFlyBV"
-		flyBodyVelocity2.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-		flyBodyVelocity2.Velocity = Vector3.new(0, 0, 0)
-		
-		flyBodyGyro2 = Instance.new("BodyGyro", root)
-		flyBodyGyro2.Name = "OptFlyBG"
-		flyBodyGyro2.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-		flyBodyGyro2.D = 1000
-		flyBodyGyro2.P = 50000
-		flyBodyGyro2.CFrame = root.CFrame
+    if state then
+        hum.PlatformStand = true
+        
+        flyBodyVelocity2 = Instance.new("BodyVelocity", root)
+        flyBodyVelocity2.Name = "OptFlyBV"
+        flyBodyVelocity2.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        flyBodyVelocity2.Velocity = Vector3.new(0, 0, 0)
+        
+        flyBodyGyro2 = Instance.new("BodyGyro", root)
+        flyBodyGyro2.Name = "OptFlyBG"
+        flyBodyGyro2.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        flyBodyGyro2.D = 1000
+        flyBodyGyro2.P = 50000
+        flyBodyGyro2.CFrame = root.CFrame
 
-		flyConn = RunService.RenderStepped:Connect(function()
-			if not isFlying then return end
-			
-			local cam = workspace.CurrentCamera
-			local moveDir = Vector3.new()
-			
-			if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-			if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
-			
-			flyBodyGyro2.CFrame = cam.CFrame
-			
-			if moveDir.Magnitude > 0 then
-				flyBodyVelocity2.Velocity = moveDir.Unit * flySpeed
-			else
-				flyBodyVelocity2.Velocity = Vector3.new(0, 0, 0)
-			end
-		end)
-	else
-		if flyConn then flyConn:Disconnect() end
-		if flyBodyVelocity2 then flyBodyVelocity2:Destroy() end
-		if flyBodyGyro2 then flyBodyGyro2:Destroy() end
-		hum.PlatformStand = false
-	end
+        flyConn = RunService.RenderStepped:Connect(function()
+            if not isFlying then return end
+            
+            local cam = workspace.CurrentCamera
+            local moveDir = Vector3.new()
+            
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+            
+            flyBodyGyro2.CFrame = cam.CFrame
+            
+            if moveDir.Magnitude > 0 then
+                flyBodyVelocity2.Velocity = moveDir.Unit * flySpeed
+            else
+                flyBodyVelocity2.Velocity = Vector3.new(0, 0, 0)
+            end
+        end)
+    else
+        if flyConn then flyConn:Disconnect() end
+        if flyBodyVelocity2 then flyBodyVelocity2:Destroy() end
+        if flyBodyGyro2 then flyBodyGyro2:Destroy() end
+        hum.PlatformStand = false
+    end
 end)
 AddInput("⚙️ Tốc Độ Bay:", flySpeed, function(v) flySpeed = tonumber(v) or 450 end)
 
@@ -1253,65 +903,60 @@ local noclip = false
 local noclipConnection = nil
 
 AddToggle("👻 Xuyên Tường (Noclip)", function(state)
-	noclip = state
-	if noclipConnection then
-		noclipConnection:Disconnect()
-		noclipConnection = nil
-	end
-	
-	if noclip then
-		noclipConnection = RunService.Stepped:Connect(function()
-			if noclip and LocalPlayer.Character then
-				for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = false
-					end
-				end
-			end
-		end)
-	end
+    noclip = state
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    
+    if noclip then
+        noclipConnection = RunService.Stepped:Connect(function()
+            if noclip and LocalPlayer.Character then
+                for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
 end)
 
 AddToggle("🛡️ Chống Rơi Vực", function(state)
-	_G.AntiVoid = state
-	task.spawn(function()
-		while _G.AntiVoid do
-			pcall(function()
-				local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if root and root.Position.Y < -40 then
-					root.CFrame = root.CFrame + Vector3.new(0, 120, 0)
-					root.AssemblyLinearVelocity = Vector3.new(0,0,0)
-				end
-			end)
-			task.wait(0.2)
-		end
-	end)
+    _G.AntiVoid = state
+    task.spawn(function()
+        while _G.AntiVoid do
+            pcall(function()
+                local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if root and root.Position.Y < -40 then
+                    root.CFrame = root.CFrame + Vector3.new(0, 120, 0)
+                    root.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                end
+            end)
+            task.wait(0.2)
+        end
+    end)
 end)
 
 AddButton("⚡ Tăng FPS", Color3.fromRGB(160, 40, 200), function()
-	pcall(function()
-		setfpscap(9999)
-	end)
+    pcall(function()
+        setfpscap(9999)
+    end)
 end)
 
 AddButton("🔄 Rejoin Server", Color3.fromRGB(40, 120, 80), function()
-	TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
 end)
 
 AddButton("🔄 Reset Nhân Vật", Color3.fromRGB(180, 90, 0), function()
-	pcall(function()
-		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then
-			hum.Health = 0
-		end
-	end)
+    pcall(function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.Health = 0
+        end
+    end)
 end)
 
-AddButton("⚠️ Tự Kick", Color3.fromRGB(180, 40, 40), function()
-	LocalPlayer:Kick("\n[⚓ Nghia Senpai Hub ⚓]\nĐã thoát game thành công!")
-end)
-
--- Nút mở lại menu
 local ToggleButton = Instance.new("TextButton", ScreenGui)
 ToggleButton.Name = "HubOpenBtn"
 ToggleButton.Size = UDim2.new(0, 50, 0, 50)
@@ -1331,8 +976,7 @@ tStroke.Color = Color3.fromRGB(0, 220, 130)
 tStroke.Thickness = 2.5
 
 ToggleButton.MouseButton1Click:Connect(function()
-	MainFrame.Visible = not MainFrame.Visible
+    MainFrame.Visible = not MainFrame.Visible
 end)
 
 print("[Nghia Senpai Hub] Script đã tải thành công!")
-print("[Nghia Senpai Hub] Sử dụng nút 'Debug Tất Cả Đảo' để xem tên chính xác của các đảo!")
