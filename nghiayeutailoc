@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT [⚓] Nghia Senpai Hub (FIXED ALL FEATURES - MOBILE + PC)
+-- SCRIPT [⚓] Nghia Senpai hub (FIXED ESP COLOR)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -10,39 +10,10 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
-local GuiService = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 
 local SPEED_MULTIPLIER = 3.0
-
--- Kiểm tra thiết bị
-local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and not UserInputService.MouseEnabled
-local isTablet = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-local screenSize = GuiService:GetScreenResolution()
-local screenWidth = screenSize.X
-local screenHeight = screenSize.Y
-
--- Điều chỉnh kích thước theo thiết bị
-local menuWidth = 320
-local menuHeight = 700
-local buttonHeight = 35
-local titleTextSize = 12
-local buttonTextSize = 11
-
-if isMobile then
-    menuWidth = math.min(screenWidth * 0.85, 280)
-    menuHeight = math.min(screenHeight * 0.75, 550)
-    buttonHeight = 40
-    titleTextSize = 10
-    buttonTextSize = 10
-elseif isTablet then
-    menuWidth = math.min(screenWidth * 0.6, 340)
-    menuHeight = math.min(screenHeight * 0.7, 600)
-    buttonHeight = 38
-    titleTextSize = 11
-    buttonTextSize = 11
-end
 
 local parentContainer = nil
 local successCore = pcall(function() return CoreGui end)
@@ -65,34 +36,10 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentContainer
 
--- ==========================================
--- NÚT BẬT/TẮT MENU (HIỂN THỊ LUÔN)
--- ==========================================
-local ToggleButton = Instance.new("TextButton", ScreenGui)
-ToggleButton.Name = "HubOpenBtn"
-ToggleButton.Size = UDim2.new(0, 55, 0, 55)
-ToggleButton.Position = UDim2.new(0, 10, 0.35, 0)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-ToggleButton.Text = "HUB"
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 14
-ToggleButton.Active = true
-ToggleButton.Draggable = true
-ToggleButton.ZIndex = 999
-
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
-local tStroke = Instance.new("UIStroke", ToggleButton)
-tStroke.Color = Color3.fromRGB(255, 255, 255)
-tStroke.Thickness = 2
-
--- ==========================================
--- MAIN FRAME
--- ==========================================
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, menuWidth, 0, menuHeight)
-MainFrame.Position = UDim2.new(0.5, -menuWidth/2, 0.5, -menuHeight/2)
+MainFrame.Size = UDim2.new(0, 320, 0, 700)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -350)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -104,7 +51,6 @@ local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Color3.fromRGB(0, 220, 130)
 MainStroke.Thickness = 2
 
--- Title Bar
 local TitleBar = Instance.new("Frame", MainFrame)
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
@@ -117,7 +63,7 @@ TitleText.BackgroundTransparency = 1
 TitleText.Text = "⚓ Nghia Senpai Hub ⚓"
 TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = titleTextSize
+TitleText.TextSize = 12
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 
 local CloseBtn = Instance.new("TextButton", TitleBar)
@@ -130,7 +76,16 @@ CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 12
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
--- Container
+CloseBtn.MouseButton1Click:Connect(function() 
+    MainFrame.Visible = false 
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
 local Container = Instance.new("ScrollingFrame", MainFrame)
 Container.Size = UDim2.new(1, -12, 1, -50)
 Container.Position = UDim2.new(0, 6, 0, 45)
@@ -139,24 +94,19 @@ Container.ScrollBarThickness = 3
 Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
 Container.ScrollingDirection = Enum.ScrollingDirection.Y
 Container.CanvasSize = UDim2.new(0, 0, 0, 0)
-Container.TouchInputEnabled = true
 
 local UIListLayout = Instance.new("UIListLayout", Container)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 6)
 
--- ==========================================
--- FUNCTIONS
--- ==========================================
 local function AddButton(name, color, callback)
     local btn = Instance.new("TextButton", Container)
-    btn.Size = UDim2.new(1, 0, 0, buttonHeight)
+    btn.Size = UDim2.new(1, 0, 0, 35)
     btn.BackgroundColor3 = color or Color3.fromRGB(40, 40, 50)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = buttonTextSize
-    btn.AutoButtonColor = true
+    btn.TextSize = 11
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     btn.MouseButton1Click:Connect(callback)
     return btn
@@ -164,13 +114,12 @@ end
 
 local function AddToggle(name, callback)
     local btn = Instance.new("TextButton", Container)
-    btn.Size = UDim2.new(1, 0, 0, buttonHeight)
+    btn.Size = UDim2.new(1, 0, 0, 35)
     btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     btn.Text = name .. " : [OFF]"
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = buttonTextSize
-    btn.AutoButtonColor = true
+    btn.TextSize = 11
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     
     local enabled = false
@@ -188,28 +137,28 @@ end
 
 local function AddInput(labelTitle, defaultVal, callback)
     local frame = Instance.new("Frame", Container)
-    frame.Size = UDim2.new(1, 0, 0, buttonHeight)
+    frame.Size = UDim2.new(1, 0, 0, 35)
     frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
     local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Size = UDim2.new(0.65, 0, 1, 0)
     label.Position = UDim2.new(0, 8, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = labelTitle
     label.TextColor3 = Color3.fromRGB(200, 200, 200)
     label.Font = Enum.Font.GothamSemibold
-    label.TextSize = buttonTextSize - 1
+    label.TextSize = 11
     label.TextXAlignment = Enum.TextXAlignment.Left
 
     local box = Instance.new("TextBox", frame)
-    box.Size = UDim2.new(0.35, -6, 0.7, 0)
-    box.Position = UDim2.new(0.65, 0, 0.15, 0)
+    box.Size = UDim2.new(0.3, -6, 0.7, 0)
+    box.Position = UDim2.new(0.7, 0, 0.15, 0)
     box.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
     box.Text = tostring(defaultVal)
     box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.Font = Enum.Font.GothamBold
-    box.TextSize = buttonTextSize
+    box.TextSize = 11
     Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
 
     box.FocusLost:Connect(function()
@@ -317,7 +266,7 @@ AddButton("💾 Lưu Vị Trí Hiện Tại", Color3.fromRGB(0, 150, 200), funct
         local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if root then
             savedPosition = root.CFrame
-            print("[Lưu Vị Trí] Đã lưu vị trí!")
+            print("[Lưu Vị Trí] Đã lưu vị trí: " .. tostring(root.Position))
         end
     end)
 end)
@@ -327,13 +276,15 @@ AddButton("📍 Teleport Đến Vị Trí Đã Lưu", Color3.fromRGB(0, 200, 100
         local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if root and savedPosition then
             root.CFrame = savedPosition
-            print("[Teleport] Đã dịch chuyển!")
+            print("[Teleport] Đã dịch chuyển đến vị trí đã lưu!")
+        else
+            print("[Teleport] Chưa có vị trí nào được lưu!")
         end
     end)
 end)
 
 -- ==========================================
--- 3. 👑 ESP ĐỊNH VỊ
+-- 3. 👑 ESP ĐỊNH VỊ (BOSS VÀNG - MYTHICAL ĐỎ - DIVINE CAM)
 -- ==========================================
 local espEnabled = false
 local espCache = {}
@@ -343,16 +294,29 @@ local function getRarityInfo(target)
     local fullStr = target.Name:lower()
     local parentName = target.Parent and target.Parent.Name:lower() or ""
     
+    -- Kiểm tra Divine trước (ưu tiên cao nhất)
     if fullStr:find("divine") or parentName:find("divine") then 
-        return "DIVINE", Color3.fromRGB(255, 140, 0)
+        return "DIVINE", Color3.fromRGB(255, 140, 0) -- Cam
     end
     
+    -- Kiểm tra Mythical
     if fullStr:find("mythic") or fullStr:find("mythical") or parentName:find("mythic") or parentName:find("mythical") then 
-        return "MYTHICAL", Color3.fromRGB(255, 0, 0)
+        return "MYTHICAL", Color3.fromRGB(255, 0, 0) -- Đỏ
     end
     
+    -- Kiểm tra Boss
     if fullStr:find("boss") or parentName:find("boss") then 
-        return "BOSS", Color3.fromRGB(255, 255, 0)
+        return "BOSS", Color3.fromRGB(255, 255, 0) -- Vàng
+    end
+    
+    -- Kiểm tra Secret
+    if fullStr:find("secret") or parentName:find("secret") then 
+        return "SECRET", Color3.fromRGB(255, 0, 128) -- Hồng
+    end
+    
+    -- Kiểm tra Legendary
+    if fullStr:find("legendary") or parentName:find("legendary") then 
+        return "LEGENDARY", Color3.fromRGB(255, 140, 0) -- Cam
     end
     
     return nil, nil
@@ -383,10 +347,13 @@ local function applyESP(item)
 
     if espCache[item] then return end
 
+    local tagTitle = "[" .. rareType .. "]\n" .. item.Name
+
     local hl = Instance.new("Highlight")
     hl.FillColor = rareColor
     hl.OutlineColor = rareColor
     hl.FillTransparency = 0.3
+    hl.OutlineTransparency = 0
     hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     hl.Parent = item
 
@@ -403,7 +370,8 @@ local function applyESP(item)
     textLbl.TextSize = 14
     textLbl.TextColor3 = rareColor
     textLbl.TextStrokeTransparency = 0
-    textLbl.Text = "[" .. rareType .. "]\n" .. item.Name
+    textLbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLbl.Text = tagTitle
 
     espCache[item] = { Highlight = hl, Billboard = bgui }
 end
@@ -416,15 +384,18 @@ local function startESP()
     espUpdateConn = RunService.Heartbeat:Connect(function()
         if not espEnabled then return end
         
+        -- Lấy vị trí người chơi
         local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if not root then return end
         
         local playerPos = root.Position
         
+        -- Quét tất cả model trong workspace
         for _, obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("Model") and obj ~= LocalPlayer.Character then
                 local objRoot = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
                 if objRoot then
+                    -- Chỉ hiện ESP cho các con thú gần người chơi (trong phạm vi 500 studs)
                     local distance = (objRoot.Position - playerPos).Magnitude
                     if distance < 500 then
                         applyESP(obj)
@@ -443,7 +414,7 @@ local function stopESP()
     clearAllESP()
 end
 
-AddToggle("👑 ESP Định Vị", function(state)
+AddToggle("👑 ESP Định Vị (Boss Vàng | Mythical Đỏ | Divine Cam)", function(state)
     espEnabled = state
     if state then
         startESP()
@@ -456,7 +427,7 @@ end)
 -- 4. 🖱️ AUTO CLICK
 -- ==========================================
 local autoClicker = false
-local autoClickInterval = 0.3
+local autoClickInterval = 0.1
 
 local function startAutoClick()
     task.spawn(function()
@@ -464,26 +435,10 @@ local function startAutoClick()
             pcall(function()
                 local cam = workspace.CurrentCamera
                 if cam then
-                    if isMobile then
-                        local clickX = cam.ViewportSize.X * 0.5
-                        local clickY = cam.ViewportSize.Y * 0.5
-                        VirtualInputManager:SendTouchEvent({
-                            Position = Vector2.new(clickX, clickY),
-                            State = Enum.UserInputState.Begin,
-                            Id = 1,
-                        })
-                        task.wait(0.05)
-                        VirtualInputManager:SendTouchEvent({
-                            Position = Vector2.new(clickX, clickY),
-                            State = Enum.UserInputState.End,
-                            Id = 1,
-                        })
-                    else
-                        local clickX = cam.ViewportSize.X * 0.85
-                        local clickY = cam.ViewportSize.Y * 0.5
-                        VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
-                        VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-                    end
+                    local clickX = cam.ViewportSize.X * 0.85
+                    local clickY = cam.ViewportSize.Y * 0.5
+                    VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
+                    VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
                 end
             end)
             task.wait(autoClickInterval)
@@ -491,68 +446,39 @@ local function startAutoClick()
     end)
 end
 
-local autoClickToggle = AddToggle("🖱️ Auto Click", function(state)
+local autoClickToggle = AddToggle("🖱️ Auto Click (Ấn Y, Siêu Nhanh)", function(state)
     autoClicker = state
     if state then
         startAutoClick()
     end
 end)
 
-if not isMobile then
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if not gpe and input.KeyCode == Enum.KeyCode.Y then
-            autoClickToggle.SetState(not autoClickToggle.GetState())
-        end
-    end)
-end
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.Y then
+        autoClickToggle.SetState(not autoClickToggle.GetState())
+    end
+end)
 
 -- ==========================================
--- 5. 🏃 TỐC ĐỘ
+-- 5. 🏃 TỐC ĐỘ & NHẢY CAO
 -- ==========================================
 local walkSpeedVal = 50 * SPEED_MULTIPLIER
 local speedEnabled = false
-local speedConnection = nil
 
 local function applyWalkSpeed()
     local char = LocalPlayer.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if hum and speedEnabled then
-        hum.WalkSpeed = walkSpeedVal
+    if hum then
+        hum.WalkSpeed = speedEnabled and walkSpeedVal or 16
     end
-end
-
-local function startSpeedLoop()
-    if speedConnection then
-        speedConnection:Disconnect()
-    end
-    
-    speedConnection = RunService.Heartbeat:Connect(function()
-        if speedEnabled then
-            applyWalkSpeed()
-        end
-    end)
 end
 
 AddToggle("🏃 Chạy Nhanh", function(state)
     speedEnabled = state
-    if state then
-        startSpeedLoop()
-        applyWalkSpeed()
-    else
-        if speedConnection then
-            speedConnection:Disconnect()
-            speedConnection = nil
-        end
-        pcall(function()
-            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.WalkSpeed = 16
-            end
-        end)
-    end
+    applyWalkSpeed()
 end)
 
-AddInput("⚙️ Tốc Độ:", walkSpeedVal, function(v)
+AddInput("⚙️ Giá Trị Tốc Độ:", walkSpeedVal, function(v)
     walkSpeedVal = tonumber(v) or 150
     if speedEnabled then
         applyWalkSpeed()
@@ -595,47 +521,43 @@ end)
 -- ==========================================
 local dashEnabled = false
 local dashDistance = 30 * SPEED_MULTIPLIER
-AddToggle("⚡ Lướt Nhanh", function(state)
+AddToggle("⚡ Lướt Nhanh Phím Q", function(state)
     dashEnabled = state
 end)
 
-if not isMobile then
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if not gpe and dashEnabled and input.KeyCode == Enum.KeyCode.Q then
-            pcall(function()
-                local char = LocalPlayer.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                local cam = workspace.CurrentCamera
-                if root and cam then
-                    local lookVec = cam.CFrame.LookVector
-                    local flatLook = Vector3.new(lookVec.X, 0, lookVec.Z).Unit
-                    root.CFrame = root.CFrame + (flatLook * dashDistance)
-                end
-            end)
-        end
-    end)
-end
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and dashEnabled and input.KeyCode == Enum.KeyCode.Q then
+        pcall(function()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local cam = workspace.CurrentCamera
+            if root and cam then
+                local lookVec = cam.CFrame.LookVector
+                local flatLook = Vector3.new(lookVec.X, 0, lookVec.Z).Unit
+                root.CFrame = root.CFrame + (flatLook * dashDistance)
+            end
+        end)
+    end
+end)
 
 local tpKeyEnabled = false
 local tpStepDist = 25 * SPEED_MULTIPLIER
-AddToggle("🎯 Dịch Chuyển", function(state)
+AddToggle("🎯 Dịch Chuyển Phím T", function(state)
     tpKeyEnabled = state
 end)
 
-if not isMobile then
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if not gpe and tpKeyEnabled and input.KeyCode == Enum.KeyCode.T then
-            pcall(function()
-                local char = LocalPlayer.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                local cam = workspace.CurrentCamera
-                if root and cam then
-                    root.CFrame = root.CFrame + (cam.CFrame.LookVector * tpStepDist)
-                end
-            end)
-        end
-    end)
-end
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and tpKeyEnabled and input.KeyCode == Enum.KeyCode.T then
+        pcall(function()
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local cam = workspace.CurrentCamera
+            if root and cam then
+                root.CFrame = root.CFrame + (cam.CFrame.LookVector * tpStepDist)
+            end
+        end)
+    end
+end)
 
 -- ==========================================
 -- 7. 🏝️ BAY ĐẾN ĐẢO
@@ -685,9 +607,6 @@ local function findIslandByModelName(islandName)
     table.insert(searchNames, baseName .. "island")
     table.insert(searchNames, baseName:gsub(" ", ""))
     
-    local biggestModel = nil
-    local biggestSize = 0
-    
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Model") then
             local objName = obj.Name:lower()
@@ -695,89 +614,63 @@ local function findIslandByModelName(islandName)
                 if objName:find(searchName) then
                     local primaryPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildOfClass("BasePart")
                     if primaryPart then
-                        local size = obj:GetExtentsSize()
-                        local totalSize = size.X * size.Y * size.Z
-                        if totalSize > biggestSize then
-                            biggestSize = totalSize
-                            biggestModel = obj
-                        end
+                        return primaryPart.Position
                     end
                 end
             end
         end
     end
-    
-    if biggestModel then
-        local primaryPart = biggestModel.PrimaryPart or biggestModel:FindFirstChild("HumanoidRootPart") or biggestModel:FindFirstChildOfClass("BasePart")
-        if primaryPart then
-            return primaryPart.Position
-        end
-    end
-    
     return nil
 end
 
 local function findIslandSmart(islandName)
-    local pos2 = findIslandByModelName(islandName)
-    if pos2 then return pos2 end
-    
     local pos1 = findIslandByName(islandName)
     if pos1 then return pos1 end
+    
+    local pos2 = findIslandByModelName(islandName)
+    if pos2 then return pos2 end
     
     return nil
 end
 
-local function findDragonSkeletonPosition(targetPos)
-    local skeletonParts = {}
+local function findDragonIslandGround(targetPos)
+    local groundParts = {}
     
     for _, obj in ipairs(workspace:GetDescendants()) do
-        pcall(function()
+        if obj:IsA("BasePart") and obj.CanCollide then
             local objName = obj.Name:lower()
-            local parentName = obj.Parent and obj.Parent.Name:lower() or ""
             
-            if objName:find("bone") or objName:find("skeleton") or objName:find("skull") or 
-               objName:find("rib") or objName:find("xương") or objName:find("xuong") or
-               objName:find("spine") or objName:find("vertebra") or
-               parentName:find("bone") or parentName:find("skeleton") or parentName:find("skull") then
-                
-                if obj:IsA("BasePart") then
-                    if obj.Position.Y > 50 then
-                        table.insert(skeletonParts, obj)
-                    end
-                elseif obj:IsA("Model") then
-                    local primaryPart = obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
-                    if primaryPart and primaryPart.Position.Y > 50 then
-                        table.insert(skeletonParts, primaryPart)
-                    end
+            if objName:find("dragon") or objName:find("bone") or objName:find("skeleton") or objName:find("skull") or objName:find("rib") then
+                if obj.Position.Y > 100 then
+                    table.insert(groundParts, obj)
                 end
             end
-        end)
+        end
     end
     
-    if #skeletonParts > 0 then
-        local highestPart = skeletonParts[1]
-        for _, part in ipairs(skeletonParts) do
+    if #groundParts > 0 then
+        local highestPart = groundParts[1]
+        for _, part in ipairs(groundParts) do
             if part.Position.Y > highestPart.Position.Y then
                 highestPart = part
             end
         end
         
-        local skeletonPos = highestPart.Position
-        
-        local rayOrigin = skeletonPos + Vector3.new(0, 50, 0)
-        local rayDirection = Vector3.new(0, -200, 0)
-        
-        local raycastParams = RaycastParams.new()
-        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-        raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-        
-        local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-        
-        if raycastResult then
-            return Vector3.new(skeletonPos.X, raycastResult.Position.Y, skeletonPos.Z)
-        else
-            return Vector3.new(skeletonPos.X, skeletonPos.Y - 10, skeletonPos.Z)
-        end
+        local groundY = highestPart.Position.Y + highestPart.Size.Y / 2
+        return Vector3.new(highestPart.Position.X, groundY, highestPart.Position.Z)
+    end
+    
+    local rayOrigin = targetPos + Vector3.new(0, 500, 0)
+    local rayDirection = Vector3.new(0, -1000, 0)
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+    
+    if raycastResult then
+        return Vector3.new(targetPos.X, raycastResult.Position.Y, targetPos.Z)
     end
     
     return targetPos
@@ -807,7 +700,7 @@ local function createLandingPlatform(position)
     
     landingPlatform = Instance.new("Part")
     landingPlatform.Name = "NghiaSenpai_LandingPlatform"
-    landingPlatform.Size = Vector3.new(20, 3, 20)
+    landingPlatform.Size = Vector3.new(15, 3, 15)
     landingPlatform.Anchored = true
     landingPlatform.CanCollide = true
     landingPlatform.Transparency = 0.5
@@ -856,7 +749,7 @@ local function flyToPosition(targetPosition, isDragonIsland)
     
     local finalGroundPos
     if isDragonIsland then
-        finalGroundPos = findDragonSkeletonPosition(targetPosition)
+        finalGroundPos = findDragonIslandGround(targetPosition)
     else
         finalGroundPos = findGroundPosition(targetPosition)
     end
@@ -865,7 +758,7 @@ local function flyToPosition(targetPosition, isDragonIsland)
     createLandingPlatform(platformPos)
     
     local startPos = root.Position
-    local flyHeight = math.max(startPos.Y, finalGroundPos.Y) + 300
+    local flyHeight = math.max(startPos.Y, finalGroundPos.Y) + 200
     local highPoint = Vector3.new(startPos.X, flyHeight, startPos.Z)
     local targetHigh = Vector3.new(finalGroundPos.X, flyHeight, finalGroundPos.Z)
     local finalPos = Vector3.new(finalGroundPos.X, finalGroundPos.Y + 5, finalGroundPos.Z)
@@ -899,7 +792,7 @@ local function flyToPosition(targetPosition, isDragonIsland)
                     finalRoot.CFrame = CFrame.new(finalPos)
                     finalRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                     
-                    task.delay(5, function()
+                    task.delay(3, function()
                         removeLandingPlatform()
                     end)
                 end
@@ -954,7 +847,7 @@ local flyConn
 local flyBodyVelocity2 = nil
 local flyBodyGyro2 = nil
 
-AddToggle("🕊️ Chức Năng Bay", function(state)
+AddToggle("🕊️ Chức Năng Bay (Siêu Mượt)", function(state)
     isFlying = state
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -964,10 +857,12 @@ AddToggle("🕊️ Chức Năng Bay", function(state)
         hum.PlatformStand = true
         
         flyBodyVelocity2 = Instance.new("BodyVelocity", root)
+        flyBodyVelocity2.Name = "OptFlyBV"
         flyBodyVelocity2.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         flyBodyVelocity2.Velocity = Vector3.new(0, 0, 0)
         
         flyBodyGyro2 = Instance.new("BodyGyro", root)
+        flyBodyGyro2.Name = "OptFlyBG"
         flyBodyGyro2.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
         flyBodyGyro2.D = 1000
         flyBodyGyro2.P = 50000
@@ -1007,7 +902,7 @@ AddInput("⚙️ Tốc Độ Bay:", flySpeed, function(v) flySpeed = tonumber(v)
 local noclip = false
 local noclipConnection = nil
 
-AddToggle("👻 Xuyên Tường", function(state)
+AddToggle("👻 Xuyên Tường (Noclip)", function(state)
     noclip = state
     if noclipConnection then
         noclipConnection:Disconnect()
@@ -1062,29 +957,26 @@ AddButton("🔄 Reset Nhân Vật", Color3.fromRGB(180, 90, 0), function()
     end)
 end)
 
-AddButton("⚠️ Tự Kick", Color3.fromRGB(180, 40, 40), function()
-    LocalPlayer:Kick("\n[⚓ Nghia Senpai Hub ⚓]\nĐã thoát game thành công!")
-end)
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Name = "HubOpenBtn"
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 15, 0.4, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+ToggleButton.Text = "HUB"
+ToggleButton.TextColor3 = Color3.fromRGB(0, 220, 130)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 12
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.ZIndex = 100
 
--- ==========================================
--- KẾT NỐI NÚT BẬT/TẮT
--- ==========================================
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+local tStroke = Instance.new("UIStroke", ToggleButton)
+tStroke.Color = Color3.fromRGB(0, 220, 130)
+tStroke.Thickness = 2.5
+
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
-CloseBtn.MouseButton1Click:Connect(function() 
-    MainFrame.Visible = false 
-end)
-
-if not isMobile then
-    UserInputService.InputBegan:Connect(function(input, gpe)
-        if not gpe and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl) then
-            MainFrame.Visible = not MainFrame.Visible
-        end
-    end)
-end
-
 print("[Nghia Senpai Hub] Script đã tải thành công!")
-print("[Nghia Senpai Hub] Thiết bị: " .. (isMobile and "Mobile" or "PC"))
-print("[Nghia Senpai Hub] Nút HUB để bật/tắt menu")
