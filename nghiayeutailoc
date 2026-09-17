@@ -463,10 +463,10 @@ local noclipEnabled = false
 local noclipConnection = nil
 
 local config = {
-    walkSpeed = 150,
-    jumpPower = 300,
-    islandFlySpeed = 500,
-    islandFlyHeight = 100,
+    walkSpeed = 100,
+    jumpPower = 250,
+    islandFlySpeed = 700,
+    islandFlyHeight = 150,
     flyToSavedSpeed = 500,
     autoClickInterval = 0.05,
     scriptPower = 1,
@@ -500,7 +500,7 @@ local function enableNoclip()
             
             local rayResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
             
-            -- Nếu đang ở gần mặt đất (< 5 studs) → BẬT collision
+            -- Nếu đang ở gần mặt đất (< 0 studs) → BẬT collision
             -- Nếu ở trên cao → TẮT collision (xuyên tường)
             local nearGround = rayResult and rayResult.Distance < 5
             
@@ -585,7 +585,7 @@ end)
 local MainTab = CreateTab("Main", "🏠")
 
 AddSection(MainTab, "BYPASS TP")
-local bypassToggle = AddToggle(MainTab, "🚀 Bypass TP (Tất cả bay)", function(state)
+local bypassToggle = AddToggle(MainTab, "🚀 Bypass TP ", function(state)
     BYPASS_TP = state
     showNotification(state and "⚡ Đã bật Bypass TP!" or "❌ Đã tắt Bypass TP")
 end)
@@ -593,7 +593,7 @@ end)
 AddSection(MainTab, "CHỨC NĂNG CƠ BẢN")
 
 -- XUYÊN TƯỜNG
-AddToggle(MainTab, "🚪 Xuyên Tường (Không Xuyên Đất)", function(state)
+AddToggle(MainTab, "🚪 Xuyên Tường ", function(state)
     noclipEnabled = state
     showNotification(state and "✅ Đã bật Xuyên Tường (không xuyên đất)!" or "❌ Đã tắt Xuyên Tường!")
     
@@ -847,7 +847,7 @@ local function bypassTeleport(targetPos, name)
         root.CFrame = CFrame.new(finalPos)
         task.wait(0.1)
         root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        showNotification("⚠️ Đã thử lại " .. name)
+        showNotification("⚠️thử lại " .. name)
     end
 end
 
@@ -958,7 +958,7 @@ local function smoothFlyToPosition(targetPos, name)
             if currentRoot then
                 currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
             end
-            showNotification("⚠️ Bay timeout!")
+            showNotification("⚠️timeout!")
         end
     end)
 end
@@ -1043,7 +1043,7 @@ AddButton(FarmTab, "💰 Mở Sell Pets(khoảng cách)", Color3.fromRGB(230, 18
                     local actionText = (obj.ActionText or ""):lower()
                     local promptName = obj.Name:lower()
                     local parentName = obj.Parent and obj.Parent.Name:lower() or ""
-                    if actionText:find("sell") or promptName:find("sell") or parentName:find("sell") then
+                    if actionText:find("sell") or promptName:find("sell Pets") or parentName:find("sellPet") then
                         obj.Enabled = true
                         obj.MaxActivationDistance = 100
                         obj:InputHoldBegin()
@@ -1163,7 +1163,7 @@ local function refreshPlayerList()
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            local btn = AddButton(PlayersTab, "👤 " .. player.Name, Color3.fromRGB(40, 40, 55), function()
+            local btn = AddButton(PlayersTab, "👤(TELE NHỮNG NGƯỜI CHƠI TRÊN ĐẢO)" .. player.Name, Color3.fromRGB(40, 40, 55), function()
                 pcall(function()
                     local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                     local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1235,7 +1235,7 @@ AddSection(SettingsTab, "TỐI ƯU HÓA")
 AddButton(SettingsTab, "🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 180, 230), function()
     pcall(function()
         Lighting.GlobalShadows = false
-        Lighting.FogEnd = 200
+        Lighting.FogEnd = 50
         Lighting.Brightness = 0.5
         Lighting.EnvironmentDiffuseScale = 0
         Lighting.EnvironmentSpecularScale = 0
@@ -1253,7 +1253,7 @@ AddButton(SettingsTab, "🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 18
         end
         
         setfpscap(30)
-        showNotification("✅ Đã giảm đồ hoạ tối đa!")
+        showNotification("✅ Đã giảm đồ hoạ")
     end)
 end)
 
