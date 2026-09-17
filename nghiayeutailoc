@@ -1,14 +1,8 @@
 -- ==========================================
--- SCRIPT [⚓] NGHIA SENPAI HUB - PREMIUM MAX
--- FIX TẤT CẢ + ANTI-DETECTION NÂNG CAO
+-- SCRIPT [⚓] NGHIA SENPAI HUB - BLOX FRUIT STYLE
+-- HỖ TRỢ MOBILE + PC
+-- GIAO DIỆN ĐẸP NHƯ SCRIPT TRẢ PHÍ
 -- ==========================================
-
---[[ 
-    ⚠️ CẢNH BÁO:
-    - Script này KHÔNG đảm bảo 100% không bị ban
-    - Không có script nào an toàn tuyệt đối với Byfron/Hyperion
-    - Sử dụng có trách nhiệm, tự chịu rủi ro
-]]
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -26,124 +20,18 @@ local isMobile = UserInputService.TouchEnabled and not UserInputService.Keyboard
 local isPC = not isMobile
 
 -- ==========================================
--- ANTI-DETECTION NÂNG CAO (MULTI-LAYER)
+-- ANTI-DETECTION
 -- ==========================================
 local function setupAntiDetection()
-    -- 1. Bảo vệ GUI
     pcall(function()
         if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
         if protect_gui then protect_gui(ScreenGui) end
-        if gethui then ScreenGui.Parent = gethui() end
     end)
-    
-    -- 2. Random tên GUI
     pcall(function()
         ScreenGui.Name = "UI_" .. tostring(math.random(1000000, 9999999))
     end)
-    
-    -- 3. Chống getnilinstances
-    pcall(function()
-        if getnilinstances then
-            local oldGetNil = getnilinstances
-            getnilinstances = function()
-                local instances = oldGetNil()
-                local filtered = {}
-                for _, inst in pairs(instances) do
-                    if inst ~= ScreenGui and inst ~= MainFrame and inst ~= Container 
-                       and inst ~= ToggleButton and inst ~= LoadingOverlay then
-                        table.insert(filtered, inst)
-                    end
-                end
-                return filtered
-            end
-        end
-    end)
-    
-    -- 4. Chống getgc
-    pcall(function()
-        if getgc then
-            local oldGetGC = getgc
-            getgc = function()
-                local objects = oldGetGC()
-                local filtered = {}
-                for _, obj in pairs(objects) do
-                    if obj ~= ScreenGui and obj ~= MainFrame and obj ~= Container 
-                       and obj ~= ToggleButton and obj ~= LoadingOverlay then
-                        table.insert(filtered, obj)
-                    end
-                end
-                return filtered
-            end
-        end
-    end)
-    
-    -- 5. Chống getreg
-    pcall(function()
-        if getreg then
-            local oldGetReg = getreg
-            getreg = function()
-                return {}
-            end
-        end
-    end)
-    
-    -- 6. Hook Kick
-    pcall(function()
-        if hookfunction and LocalPlayer.Kick then
-            hookfunction(LocalPlayer.Kick, function() end)
-        end
-    end)
-    
-    -- 7. Hook __namecall để chống kick
-    pcall(function()
-        if getrawmetatable and setreadonly then
-            local mt = getrawmetatable(game)
-            if mt then
-                local oldNamecall = mt.__namecall
-                setreadonly(mt, false)
-                mt.__namecall = newcclosure(function(self, ...)
-                    local method = getnamecallmethod()
-                    if (method == "Kick" or method == "kick") and self == LocalPlayer then
-                        return
-                    end
-                    if method == "FireServer" then
-                        local args = {...}
-                        -- Chống kick qua remote
-                        if self.Name:lower():find("kick") or self.Name:lower():find("ban") then
-                            return
-                        end
-                    end
-                    return oldNamecall(self, ...)
-                end)
-                setreadonly(mt, true)
-            end
-        end
-    end)
-    
-    -- 8. Random delay khi call remote (tránh pattern detection)
-    pcall(function()
-        if hookfunction and getrawmetatable then
-            local mt = getrawmetatable(game)
-            if mt and mt.__namecall then
-                local oldNamecall = mt.__namecall
-                setreadonly(mt, false)
-                mt.__namecall = newcclosure(function(self, ...)
-                    local method = getnamecallmethod()
-                    if method == "FireServer" or method == "InvokeServer" then
-                        -- Random delay 0-10ms để tránh pattern
-                        task.wait(math.random() * 0.01)
-                    end
-                    return oldNamecall(self, ...)
-                end)
-                setreadonly(mt, true)
-            end
-        end
-    end)
 end
 
--- ==========================================
--- LOADING SCREEN
--- ==========================================
 local parentContainer = nil
 local successCore = pcall(function() return CoreGui end)
 
@@ -165,6 +53,11 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentContainer
 
+setupAntiDetection()
+
+-- ==========================================
+-- LOADING SCREEN (BLOX FRUIT STYLE)
+-- ==========================================
 local LoadingOverlay = Instance.new("Frame", ScreenGui)
 LoadingOverlay.Size = UDim2.new(1, 0, 1, 0)
 LoadingOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -172,100 +65,479 @@ LoadingOverlay.BackgroundTransparency = 0.3
 LoadingOverlay.ZIndex = 9999
 
 local LoadingFrame = Instance.new("Frame", LoadingOverlay)
-LoadingFrame.Size = UDim2.new(0, 340, 0, 180)
-LoadingFrame.Position = UDim2.new(0.5, -170, 0.5, -90)
-LoadingFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
+LoadingFrame.Size = UDim2.new(0, 400, 0, 200)
+LoadingFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 LoadingFrame.ZIndex = 10000
 Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 15)
 local loadStroke = Instance.new("UIStroke", LoadingFrame)
-loadStroke.Color = Color3.fromRGB(0, 255, 150)
-loadStroke.Thickness = 2
+loadStroke.Color = Color3.fromRGB(138, 43, 226)
+loadStroke.Thickness = 3
 
 local loadTitle = Instance.new("TextLabel", LoadingFrame)
-loadTitle.Size = UDim2.new(1, 0, 0, 30)
-loadTitle.Position = UDim2.new(0, 0, 0, 20)
+loadTitle.Size = UDim2.new(1, 0, 0, 40)
+loadTitle.Position = UDim2.new(0, 0, 0, 25)
 loadTitle.BackgroundTransparency = 1
 loadTitle.Text = "⚓ NGHIA SENPAI HUB ⚓"
-loadTitle.TextColor3 = Color3.fromRGB(0, 255, 150)
+loadTitle.TextColor3 = Color3.fromRGB(138, 43, 226)
 loadTitle.Font = Enum.Font.GothamBlack
-loadTitle.TextSize = 18
+loadTitle.TextSize = 24
+
+local loadSubtitle = Instance.new("TextLabel", LoadingFrame)
+loadSubtitle.Size = UDim2.new(1, 0, 0, 20)
+loadSubtitle.Position = UDim2.new(0, 0, 0, 65)
+loadSubtitle.BackgroundTransparency = 1
+loadSubtitle.Text = "PREMIUM EDITION"
+loadSubtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+loadSubtitle.Font = Enum.Font.GothamBold
+loadSubtitle.TextSize = 12
 
 local percentLabel = Instance.new("TextLabel", LoadingFrame)
-percentLabel.Size = UDim2.new(1, 0, 0, 40)
-percentLabel.Position = UDim2.new(0, 0, 0, 55)
+percentLabel.Size = UDim2.new(1, 0, 0, 30)
+percentLabel.Position = UDim2.new(0, 0, 0, 90)
 percentLabel.BackgroundTransparency = 1
 percentLabel.Text = "0%"
 percentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 percentLabel.Font = Enum.Font.GothamBlack
-percentLabel.TextSize = 32
+percentLabel.TextSize = 20
 
 local progressBg = Instance.new("Frame", LoadingFrame)
-progressBg.Size = UDim2.new(0.85, 0, 0, 15)
-progressBg.Position = UDim2.new(0.075, 0, 0.65, 0)
+progressBg.Size = UDim2.new(0.8, 0, 0, 12)
+progressBg.Position = UDim2.new(0.1, 0, 0, 130)
 progressBg.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-Instance.new("UICorner", progressBg).CornerRadius = UDim.new(0, 7)
+Instance.new("UICorner", progressBg).CornerRadius = UDim.new(1, 0)
 
 local progressFill = Instance.new("Frame", progressBg)
 progressFill.Size = UDim2.new(0, 0, 1, 0)
-progressFill.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-Instance.new("UICorner", progressFill).CornerRadius = UDim.new(0, 7)
+progressFill.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
 local progressGradient = Instance.new("UIGradient", progressFill)
 progressGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(75, 0, 130))
 })
 
 local statusLabel = Instance.new("TextLabel", LoadingFrame)
 statusLabel.Size = UDim2.new(1, 0, 0, 20)
-statusLabel.Position = UDim2.new(0, 0, 0, 140)
+statusLabel.Position = UDim2.new(0, 0, 0, 155)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = "Đang tải..."
 statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.TextSize = 11
 
-local menuWidth = isMobile and 320 or 360
-local menuHeight = isMobile and 620 or 680
-local buttonHeight = isMobile and 46 or 40
-
+-- ==========================================
+-- MAIN MENU (BLOX FRUIT STYLE)
+-- ==========================================
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, menuWidth, 0, menuHeight)
-MainFrame.Position = UDim2.new(0.5, -menuWidth/2, 0.5, -menuHeight/2)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = false
 MainFrame.ZIndex = 10
 
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Color3.fromRGB(0, 255, 150)
-MainStroke.Thickness = 2.5
+MainStroke.Color = Color3.fromRGB(138, 43, 226)
+MainStroke.Thickness = 2
 
--- Toggle Button sớm để setup anti-detection
-local ToggleButton = Instance.new("TextButton", ScreenGui)
-ToggleButton.Size = UDim2.new(0, isMobile and 65 or 60, 0, isMobile and 65 or 60)
-ToggleButton.Position = UDim2.new(0, 15, 0.4, 0)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-ToggleButton.Text = "⚓"
-ToggleButton.TextColor3 = Color3.fromRGB(0, 220, 130)
-ToggleButton.Font = Enum.Font.GothamBlack
-ToggleButton.TextSize = isMobile and 24 or 22
-ToggleButton.ZIndex = 100
-ToggleButton.Active = true
-ToggleButton.Draggable = true
-ToggleButton.Visible = false
+-- ==========================================
+-- TITLE BAR (TÊN HUB Ở GIỮA)
+-- ==========================================
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1, 0, 0, 45)
+TitleBar.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
 
-local tStroke = Instance.new("UIStroke", ToggleButton)
-tStroke.Color = Color3.fromRGB(0, 255, 150)
-tStroke.Thickness = 2.5
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+local TitleGradient = Instance.new("UIGradient", TitleBar)
+TitleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(75, 0, 130))
+})
 
--- Setup Anti-Detection SAU KHI tạo GUI
-setupAntiDetection()
+-- Tên hub căn giữa
+local TitleText = Instance.new("TextLabel", TitleBar)
+TitleText.Size = UDim2.new(1, -100, 1, 0)
+TitleText.Position = UDim2.new(0, 50, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "⚓ NGHIA SENPAI HUB ⚓"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBlack
+TitleText.TextSize = 15
+TitleText.TextXAlignment = Enum.TextXAlignment.Center
 
-local menuUnlocked = false
+-- Nút đóng
+local CloseBtn = Instance.new("TextButton", TitleBar)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -40, 0, 7)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
 
+CloseBtn.MouseButton1Click:Connect(function() 
+    MainFrame.Visible = false 
+end)
+
+-- Ấn CTRL để bật/tắt menu (cả LeftCtrl và RightCtrl)
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe then
+        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+            MainFrame.Visible = not MainFrame.Visible
+        end
+    end
+end)
+
+-- ==========================================
+-- TAB BAR (BLOX FRUIT STYLE)
+-- ==========================================
+local TabBar = Instance.new("Frame", MainFrame)
+TabBar.Size = UDim2.new(0, 140, 1, -55)
+TabBar.Position = UDim2.new(0, 10, 0, 50)
+TabBar.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 10)
+
+local TabList = Instance.new("UIListLayout", TabBar)
+TabList.SortOrder = Enum.SortOrder.LayoutOrder
+TabList.Padding = UDim.new(0, 5)
+TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local TabContent = Instance.new("Frame", MainFrame)
+TabContent.Size = UDim2.new(1, -165, 1, -55)
+TabContent.Position = UDim2.new(0, 155, 0, 50)
+TabContent.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+Instance.new("UICorner", TabContent).CornerRadius = UDim.new(0, 10)
+
+-- ==========================================
+-- TAB SYSTEM
+-- ==========================================
+local currentTab = nil
+local tabs = {}
+
+local function CreateTab(name, icon)
+    local tabBtn = Instance.new("TextButton", TabBar)
+    tabBtn.Size = UDim2.new(1, -10, 0, 40)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    tabBtn.Text = icon .. " " .. name
+    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabBtn.Font = Enum.Font.GothamBold
+    tabBtn.TextSize = 11
+    tabBtn.AutoButtonColor = false
+    Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 8)
+    
+    local scroll = Instance.new("ScrollingFrame", TabContent)
+    scroll.Size = UDim2.new(1, -10, 1, -10)
+    scroll.Position = UDim2.new(0, 5, 0, 5)
+    scroll.BackgroundTransparency = 1
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Color3.fromRGB(138, 43, 226)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.ScrollingDirection = Enum.ScrollingDirection.Y
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.Visible = false
+    
+    local scrollLayout = Instance.new("UIListLayout", scroll)
+    scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    scrollLayout.Padding = UDim.new(0, 6)
+    
+    local tabData = {
+        Button = tabBtn,
+        Scroll = scroll,
+        Name = name
+    }
+    
+    table.insert(tabs, tabData)
+    
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, tab in ipairs(tabs) do
+            tab.Button.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            tab.Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+            tab.Scroll.Visible = false
+        end
+        
+        tabBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        scroll.Visible = true
+        
+        currentTab = tabData
+    end)
+    
+    return scroll
+end
+
+-- ==========================================
+-- UI COMPONENTS (BLOX FRUIT STYLE)
+-- ==========================================
+local function AddSection(parent, title)
+    local section = Instance.new("TextLabel", parent)
+    section.Size = UDim2.new(1, 0, 0, 25)
+    section.BackgroundTransparency = 1
+    section.Text = "━━━━━━ " .. title .. " ━━━━━━"
+    section.TextColor3 = Color3.fromRGB(138, 43, 226)
+    section.Font = Enum.Font.GothamBold
+    section.TextSize = 11
+    return section
+end
+
+local function AddToggle(parent, name, callback)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(1, 0, 0, 40)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local toggleBg = Instance.new("Frame", frame)
+    toggleBg.Size = UDim2.new(0, 50, 0, 24)
+    toggleBg.Position = UDim2.new(1, -62, 0.5, -12)
+    toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+    Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
+    
+    local toggleCircle = Instance.new("Frame", toggleBg)
+    toggleCircle.Size = UDim2.new(0, 18, 0, 18)
+    toggleCircle.Position = UDim2.new(0, 3, 0.5, -9)
+    toggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", toggleCircle).CornerRadius = UDim.new(1, 0)
+    
+    local toggleBtn = Instance.new("TextButton", frame)
+    toggleBtn.Size = UDim2.new(1, 0, 1, 0)
+    toggleBtn.BackgroundTransparency = 1
+    toggleBtn.Text = ""
+    
+    local enabled = false
+    local function updateState(newState)
+        enabled = newState
+        
+        if enabled then
+            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(138, 43, 226)}):Play()
+            TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 29, 0.5, -9)}):Play()
+        else
+            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+            TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -9)}):Play()
+        end
+        
+        task.spawn(function() pcall(callback, enabled) end)
+    end
+    
+    toggleBtn.MouseButton1Click:Connect(function() updateState(not enabled) end)
+    toggleBtn.TouchTap:Connect(function() updateState(not enabled) end)
+    
+    return { SetState = updateState, GetState = function() return enabled end }
+end
+
+local function AddButton(parent, name, color, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = color or Color3.fromRGB(40, 40, 55)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(
+            math.min(btn.BackgroundColor3.R * 1.3, 255),
+            math.min(btn.BackgroundColor3.G * 1.3, 255),
+            math.min(btn.BackgroundColor3.B * 1.3, 255)
+        )}):Play()
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = color or Color3.fromRGB(40, 40, 55)}):Play()
+    end)
+    
+    btn.MouseButton1Click:Connect(function()
+        task.spawn(function() pcall(callback) end)
+    end)
+    btn.TouchTap:Connect(function()
+        task.spawn(function() pcall(callback) end)
+    end)
+    
+    return btn
+end
+
+local function AddInput(parent, labelText, defaultVal, callback)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(1, 0, 0, 38)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.55, 0, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local box = Instance.new("TextBox", frame)
+    box.Size = UDim2.new(0.35, -12, 0.7, 0)
+    box.Position = UDim2.new(0.6, 0, 0.15, 0)
+    box.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+    box.Text = tostring(defaultVal)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.GothamBold
+    box.TextSize = 12
+    box.PlaceholderText = "..."
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+    
+    box.FocusLost:Connect(function()
+        local val = tonumber(box.Text)
+        if val then 
+            task.spawn(function() pcall(callback, val) end)
+        end
+    end)
+    
+    return box
+end
+
+-- ==========================================
+-- NOTIFICATION
+-- ==========================================
+local function showNotification(message, duration)
+    duration = duration or 3
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 300, 0, 60)
+    notification.Position = UDim2.new(0.5, -150, 0, -70)
+    notification.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    notification.ZIndex = 999
+    notification.Parent = ScreenGui
+    Instance.new("UICorner", notification).CornerRadius = UDim.new(0, 10)
+    
+    local notifStroke = Instance.new("UIStroke", notification)
+    notifStroke.Color = Color3.fromRGB(138, 43, 226)
+    notifStroke.Thickness = 2
+    
+    local notifText = Instance.new("TextLabel", notification)
+    notifText.Size = UDim2.new(1, -20, 1, 0)
+    notifText.Position = UDim2.new(0, 10, 0, 0)
+    notifText.BackgroundTransparency = 1
+    notifText.Text = message
+    notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    notifText.Font = Enum.Font.GothamBold
+    notifText.TextSize = 12
+    notifText.TextWrapped = true
+    
+    TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -150, 0, 20)
+    }):Play()
+    
+    task.delay(duration, function()
+        TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(0.5, -150, 0, -70)
+        }):Play()
+        task.wait(0.3)
+        notification:Destroy()
+    end)
+end
+
+-- ==========================================
+-- BIẾN TOÀN CỤC
+-- ==========================================
+local BYPASS_TP = false
+local isFlyingToIsland = false
+local savedPosition = nil
+local speedEnabled = false
+local speedMaintainConnection = nil
+local DEFAULT_SPEED_RESET = 40
+local espPlayersEnabled2 = false
+
+-- Biến xuyên tường
+local noclipEnabled = false
+local noclipConnection = nil
+
+local config = {
+    walkSpeed = 150,
+    jumpPower = 300,
+    islandFlySpeed = 500,
+    islandFlyHeight = 100,
+    flyToSavedSpeed = 500,
+    autoClickInterval = 0.05,
+    scriptPower = 1,
+}
+
+-- ==========================================
+-- HÀM XUYÊN TƯỜNG (KHÔNG XUYÊN ĐẤT)
+-- ==========================================
+local function enableNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+    end
+    
+    noclipConnection = RunService.Stepped:Connect(function()
+        if not noclipEnabled then return end
+        
+        pcall(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+            
+            -- Raycast xuống dưới để tìm mặt đất
+            local rayOrigin = root.Position
+            local rayDirection = Vector3.new(0, -10, 0)
+            
+            local raycastParams = RaycastParams.new()
+            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+            raycastParams.FilterDescendantsInstances = {char}
+            
+            local rayResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+            
+            -- Nếu đang ở gần mặt đất (< 5 studs) → BẬT collision
+            -- Nếu ở trên cao → TẮT collision (xuyên tường)
+            local nearGround = rayResult and rayResult.Distance < 5
+            
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    if nearGround then
+                        part.CanCollide = true
+                    else
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end)
+end
+
+local function disableNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    
+    pcall(function()
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end)
+end
+
+-- ==========================================
+-- LOADING ANIMATION
+-- ==========================================
 task.spawn(function()
     local duration = 5
     local startTime = os.clock()
@@ -294,562 +566,45 @@ task.spawn(function()
     end
     
     percentLabel.Text = "100%"
-    statusLabel.Text = "✅ THÀNH CÔNG!"
+    statusLabel.Text = "✅ KÍCH HOẠT THÀNH CÔNG!"
     statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
     progressFill.Size = UDim2.new(1, 0, 1, 0)
     
     task.wait(0.5)
     LoadingOverlay:Destroy()
     MainFrame.Visible = true
-    menuUnlocked = true
-    ToggleButton.Visible = true
-end)
-
--- ==========================================
--- TITLE BAR
--- ==========================================
-local TitleBar = Instance.new("Frame", MainFrame)
-TitleBar.Size = UDim2.new(1, 0, 0, 45)
-TitleBar.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 15)
-
-local TitleGradient = Instance.new("UIGradient", TitleBar)
-TitleGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 200, 100)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 50))
-})
-
-local TitleText = Instance.new("TextLabel", TitleBar)
-TitleText.Size = UDim2.new(1, -40, 0, 0)
-TitleText.Position = UDim2.new(0, 15, 0, 0)
-TitleText.BackgroundTransparency = 1
-TitleText.Text = "⚓ NGHIA SENPAI HUB ⚓"
-TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleText.Font = Enum.Font.GothamBlack
-TitleText.TextSize = isMobile and 14 or 16
-TitleText.TextXAlignment = Enum.TextXAlignment.Left
-
-local TitleStroke = Instance.new("UIStroke", TitleText)
-TitleStroke.Color = Color3.fromRGB(0, 100, 50)
-TitleStroke.Thickness = 1
-
-local CloseBtn = Instance.new("TextButton", TitleBar)
-CloseBtn.Size = UDim2.new(0, 28, 0, 28)
-CloseBtn.Position = UDim2.new(1, -32, 0, 8)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-CloseBtn.Text = "✕"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 14
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
-
-CloseBtn.MouseButton1Click:Connect(function() 
-    MainFrame.Visible = false 
-end)
-
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe then
-        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-            if menuUnlocked then
-                MainFrame.Visible = not MainFrame.Visible
-            end
-        end
+    
+    if #tabs > 0 then
+        tabs[1].Button.MouseButton1Click:Fire()
     end
 end)
 
-local Container = Instance.new("ScrollingFrame", MainFrame)
-Container.Size = UDim2.new(1, -16, 1, -55)
-Container.Position = UDim2.new(0, 8, 0, 50)
-Container.BackgroundTransparency = 1
-Container.ScrollBarThickness = isMobile and 5 or 4
-Container.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 120)
-Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
-Container.ScrollingDirection = Enum.ScrollingDirection.Y
-Container.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-local UIListLayout = Instance.new("UIListLayout", Container)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
-
-local config = {
-    walkSpeed = 150,
-    jumpPower = 300,
-    islandFlySpeed = 400,
-    islandFlyHeight = 100,
-    flyToSavedSpeed = 400,
-    autoClickInterval = 0.1,
-}
-
 -- ==========================================
--- UI HELPERS (nâng cấp với glow effect)
+-- TAB 1: 🏠 MAIN
 -- ==========================================
-local function AddSection(title)
-    local section = Instance.new("Frame", Container)
-    section.Size = UDim2.new(1, 0, 0, 36)
-    section.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-    section.BackgroundTransparency = 0.5
-    Instance.new("UICorner", section).CornerRadius = UDim.new(0, 8)
-    
-    local secGradient = Instance.new("UIGradient", section)
-    secGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 200))
-    })
-    secGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.7)
-    })
-    
-    local secStroke = Instance.new("UIStroke", section)
-    secStroke.Color = Color3.fromRGB(0, 255, 150)
-    secStroke.Thickness = 1.5
-    secStroke.Transparency = 0.5
-    
-    local sectionText = Instance.new("TextLabel", section)
-    sectionText.Size = UDim2.new(1, -20, 1, 0)
-    sectionText.Position = UDim2.new(0, 10, 0, 0)
-    sectionText.BackgroundTransparency = 1
-    sectionText.Text = title
-    sectionText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    sectionText.Font = Enum.Font.GothamBold
-    sectionText.TextSize = isMobile and 12 or 13
-    sectionText.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local textStroke = Instance.new("UIStroke", sectionText)
-    textStroke.Color = Color3.fromRGB(0, 0, 0)
-    textStroke.Thickness = 1.5
-    
-    return section
-end
+local MainTab = CreateTab("Main", "🏠")
 
-local function AddButton(name, color, callback, isPlayerBtn)
-    local btn = Instance.new("TextButton", Container)
-    btn.Size = UDim2.new(1, 0, 0, buttonHeight)
-    btn.BackgroundColor3 = color or Color3.fromRGB(30, 30, 40)
-    btn.Text = ""
-    btn.AutoButtonColor = false
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+AddSection(MainTab, "BYPASS TP")
+local bypassToggle = AddToggle(MainTab, "🚀 Bypass TP (Tất cả bay)", function(state)
+    BYPASS_TP = state
+    showNotification(state and "⚡ Đã bật Bypass TP!" or "❌ Đã tắt Bypass TP")
+end)
+
+AddSection(MainTab, "CHỨC NĂNG CƠ BẢN")
+
+-- XUYÊN TƯỜNG
+AddToggle(MainTab, "🚪 Xuyên Tường (Không Xuyên Đất)", function(state)
+    noclipEnabled = state
+    showNotification(state and "✅ Đã bật Xuyên Tường (không xuyên đất)!" or "❌ Đã tắt Xuyên Tường!")
     
-    local btnStroke = Instance.new("UIStroke", btn)
-    btnStroke.Color = color or Color3.fromRGB(80, 80, 100)
-    btnStroke.Thickness = 1.5
-    btnStroke.Transparency = 0.3
-    
-    local btnText = Instance.new("TextLabel", btn)
-    btnText.Size = UDim2.new(1, -10, 1, 0)
-    btnText.Position = UDim2.new(0, 5, 0, 0)
-    btnText.BackgroundTransparency = 1
-    btnText.Text = name
-    btnText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btnText.Font = Enum.Font.GothamBlack
-    btnText.TextSize = isMobile and 12 or 12
-    btnText.TextXAlignment = Enum.TextXAlignment.Center
-    
-    local txtStroke = Instance.new("UIStroke", btnText)
-    txtStroke.Color = Color3.fromRGB(0, 0, 0)
-    txtStroke.Thickness = 1.5
-    txtStroke.Transparency = 0.3
-    
-    if isPlayerBtn then
-        btn:SetAttribute("IsPlayerBtn", true)
+    if state then
+        enableNoclip()
+    else
+        disableNoclip()
     end
-    
-    btn.MouseButton1Down:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, 0, buttonHeight + 10)}):Play()
-    end)
-    btn.MouseButton1Up:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, 0, buttonHeight)}):Play()
-    end)
-    
-    btn.MouseButton1Click:Connect(function()
-        if menuUnlocked then 
-            task.spawn(function()
-                pcall(callback)
-            end)
-        end
-    end)
-    btn.TouchTap:Connect(function()
-        if menuUnlocked then 
-            task.spawn(function()
-                pcall(callback)
-            end)
-        end
-    end)
-    return btn
-end
+end)
 
-local function AddToggle(name, callback)
-    local btn = Instance.new("TextButton", Container)
-    btn.Size = UDim2.new(1, 0, 0, buttonHeight)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    btn.Text = ""
-    btn.AutoButtonColor = false
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    
-    local btnStroke = Instance.new("UIStroke", btn)
-    btnStroke.Color = Color3.fromRGB(80, 80, 100)
-    btnStroke.Thickness = 1.5
-    btnStroke.Transparency = 0.3
-    
-    local btnText = Instance.new("TextLabel", btn)
-    btnText.Size = UDim2.new(1, -10, 1, 0)
-    btnText.Position = UDim2.new(0, 5, 0, 0)
-    btnText.BackgroundTransparency = 1
-    btnText.Text = name .. " : [OFF]"
-    btnText.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btnText.Font = Enum.Font.GothamBlack
-    btnText.TextSize = isMobile and 12 or 12
-    btnText.TextXAlignment = Enum.TextXAlignment.Center
-    
-    local txtStroke = Instance.new("UIStroke", btnText)
-    txtStroke.Color = Color3.fromRGB(0, 0, 0)
-    txtStroke.Thickness = 1.5
-    txtStroke.Transparency = 0.3
-    
-    local enabled = false
-    local function updateState(newState)
-        if not menuUnlocked then return end
-        enabled = newState
-        btnText.Text = name .. " : " .. (enabled and "[✅ ON]" or "[❌ OFF]")
-        btn.BackgroundColor3 = enabled and Color3.fromRGB(0, 160, 80) or Color3.fromRGB(25, 25, 35)
-        btnText.TextColor3 = enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
-        btnStroke.Color = enabled and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(80, 80, 100)
-        
-        if enabled then
-            TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, buttonHeight + 5)}):Play()
-        else
-            TweenService:Create(btn, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, buttonHeight)}):Play()
-        end
-        
-        task.spawn(function()
-            pcall(callback, enabled)
-        end)
-    end
-    
-    btn.MouseButton1Click:Connect(function() updateState(not enabled) end)
-    btn.TouchTap:Connect(function() updateState(not enabled) end)
-    
-    return { SetState = updateState, GetState = function() return enabled end }
-end
-
-local function AddInput(labelTitle, defaultVal, callback)
-    local frame = Instance.new("Frame", Container)
-    frame.Size = UDim2.new(1, 0, 0, 34)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-    
-    local frameStroke = Instance.new("UIStroke", frame)
-    frameStroke.Color = Color3.fromRGB(60, 60, 80)
-    frameStroke.Thickness = 1
-
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(0.6, 0, 1, 0)
-    label.Position = UDim2.new(0, 8, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = labelTitle
-    label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = isMobile and 10 or 11
-    label.TextXAlignment = Enum.TextXAlignment.Left
-
-    local box = Instance.new("TextBox", frame)
-    box.Size = UDim2.new(0.35, -6, 0.7, 0)
-    box.Position = UDim2.new(0.65, 0, 0.15, 0)
-    box.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    box.Text = tostring(defaultVal)
-    box.TextColor3 = Color3.fromRGB(255, 255, 255)
-    box.Font = Enum.Font.GothamBold
-    box.TextSize = isMobile and 11 or 11
-    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
-
-    box.FocusLost:Connect(function()
-        local val = tonumber(box.Text)
-        if val then 
-            task.spawn(function()
-                pcall(callback, val)
-            end)
-        end
-    end)
-end
-
-local function showNotification(message, duration)
-    duration = duration or 3
-    local notification = Instance.new("Frame")
-    notification.Size = UDim2.new(0, 300, 0, 55)
-    notification.Position = UDim2.new(0.5, -150, 0.1, 0)
-    notification.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    notification.ZIndex = 999
-    notification.Parent = ScreenGui
-    Instance.new("UICorner", notification).CornerRadius = UDim.new(0, 10)
-    
-    local notifStroke = Instance.new("UIStroke", notification)
-    notifStroke.Color = Color3.fromRGB(0, 255, 150)
-    notifStroke.Thickness = 2
-    
-    local notifText = Instance.new("TextLabel", notification)
-    notifText.Size = UDim2.new(1, -20, 1, 0)
-    notifText.Position = UDim2.new(0, 10, 0, 0)
-    notifText.BackgroundTransparency = 1
-    notifText.Text = message
-    notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    notifText.Font = Enum.Font.GothamBold
-    notifText.TextSize = 12
-    notifText.TextWrapped = true
-    
-    task.delay(duration, function()
-        notification:Destroy()
-    end)
-end
-
--- ==========================================
--- BIẾN TOÀN CỤC
--- ==========================================
-local isFlyingToIsland = false
-local currentFlyTween = nil
-local savedPosition = nil
-local speedEnabled = false
-local speedMaintainConnection = nil
-local DEFAULT_SPEED_RESET = 40
-
-local espPlayersEnabled = false
-local espNormalPetsEnabled = false
-local espRarePetsEnabled = false
-local espCache = {}
-
--- ==========================================
--- HÀM BAY MƯỢT MÀ
--- ==========================================
-local function stopFlying()
-    isFlyingToIsland = false
-    if currentFlyTween then
-        pcall(function() currentFlyTween:Cancel() end)
-        currentFlyTween = nil
-    end
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if root then
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    end
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.PlatformStand = false
-    end
-end
-
-local function flyToExactPosition(targetPos, islandName)
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if not root or not hum then return end
-    
-    stopFlying()
-    task.wait(0.1)
-    
-    isFlyingToIsland = true
-    hum.PlatformStand = true
-    
-    local startPos = root.Position
-    local flyHeight = math.max(startPos.Y, targetPos.Y) + config.islandFlyHeight
-    
-    -- Tạo waypoints
-    local waypoints = {}
-    local numPoints = 8
-    
-    table.insert(waypoints, Vector3.new(startPos.X, flyHeight, startPos.Z))
-    
-    for i = 1, numPoints do
-        local alpha = i / numPoints
-        local x = startPos.X + (targetPos.X - startPos.X) * alpha
-        local z = startPos.Z + (targetPos.Z - startPos.Z) * alpha
-        table.insert(waypoints, Vector3.new(x, flyHeight, z))
-    end
-    
-    table.insert(waypoints, Vector3.new(targetPos.X, targetPos.Y + 5, targetPos.Z))
-    
-    showNotification("🚁 Đang bay đến " .. islandName .. "...")
-    
-    local currentIndex = 1
-    
-    local function moveToNextWaypoint()
-        if not isFlyingToIsland then return end
-        if currentIndex > #waypoints then
-            isFlyingToIsland = false
-            hum.PlatformStand = false
-            root.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
-            root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            showNotification("✅ Đã đến " .. islandName .. "!")
-            return
-        end
-        
-        local waypoint = waypoints[currentIndex]
-        local currentPos = root.Position
-        local distance = (waypoint - currentPos).Magnitude
-        
-        if distance < 5 then
-            currentIndex = currentIndex + 1
-            moveToNextWaypoint()
-            return
-        end
-        
-        local speed = config.islandFlySpeed
-        local duration = math.clamp(distance / speed, 0.1, 2)
-        
-        local tween = TweenService:Create(
-            root,
-            TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
-            {CFrame = CFrame.new(waypoint)}
-        )
-        currentFlyTween = tween
-        tween:Play()
-        
-        tween.Completed:Connect(function()
-            if not isFlyingToIsland then return end
-            currentIndex = currentIndex + 1
-            moveToNextWaypoint()
-        end)
-    end
-    
-    moveToNextWaypoint()
-    
-    task.delay(15, function()
-        if isFlyingToIsland then
-            stopFlying()
-            root.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
-            showNotification("⚠️ Bay timeout - đã teleport trực tiếp!")
-        end
-    end)
-end
-
--- ==========================================
--- ESP FUNCTIONS
--- ==========================================
-local function clearESP()
-    for item, espData in pairs(espCache) do
-        pcall(function()
-            if espData.Highlight then espData.Highlight:Destroy() end
-            if espData.Billboard then espData.Billboard:Destroy() end
-        end)
-    end
-    espCache = {}
-end
-
-local function applyPlayerESP(player)
-    pcall(function()
-        local char = player.Character
-        if not char then return end
-        local head = char:FindFirstChild("Head")
-        if not head then return end
-        if head:FindFirstChild("PlayerESP") then return end
-        
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "PlayerESP_Highlight"
-        highlight.FillColor = Color3.fromRGB(255, 100, 100)
-        highlight.FillTransparency = 0.7
-        highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-        highlight.OutlineTransparency = 0
-        highlight.Parent = char
-        
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "PlayerESP"
-        billboard.Size = UDim2.new(0, 200, 0, 35)
-        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-        billboard.AlwaysOnTop = true
-        billboard.Parent = head
-        
-        local nameLabel = Instance.new("TextLabel", billboard)
-        nameLabel.Size = UDim2.new(1, 0, 1, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = "👤 " .. player.Name
-        nameLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        nameLabel.Font = Enum.Font.GothamBlack
-        nameLabel.TextSize = 14
-        nameLabel.TextStrokeTransparency = 0
-        nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    end)
-end
-
-local function applyPetESP(pet, isRare)
-    pcall(function()
-        if not pet then return end
-        
-        local name = pet.Name:lower()
-        local parentName = pet.Parent and pet.Parent.Name:lower() or ""
-        
-        local petType = "NORMAL"
-        local petColor = Color3.fromRGB(150, 255, 150)
-        
-        if isRare then
-            if name:find("mythic") or name:find("mythical") or parentName:find("mythic") then
-                petType = "MYTHICAL"
-                petColor = Color3.fromRGB(255, 0, 255)
-            elseif name:find("divine") or parentName:find("divine") then
-                petType = "DIVINE"
-                petColor = Color3.fromRGB(255, 215, 0)
-            elseif name:find("boss") or parentName:find("boss") then
-                petType = "BOSS"
-                petColor = Color3.fromRGB(255, 50, 50)
-            elseif name:find("secret") or parentName:find("secret") then
-                petType = "SECRET"
-                petColor = Color3.fromRGB(255, 105, 180)
-            elseif name:find("legendary") or parentName:find("legendary") then
-                petType = "LEGENDARY"
-                petColor = Color3.fromRGB(255, 165, 0)
-            else
-                return
-            end
-        end
-        
-        if espCache[pet] then return end
-        
-        local part = pet:IsA("Model") and (pet.PrimaryPart or pet:FindFirstChildOfClass("BasePart")) or pet
-        if not part then return end
-        
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "PetESP_Highlight"
-        highlight.FillColor = petColor
-        highlight.FillTransparency = 0.7
-        highlight.OutlineColor = petColor
-        highlight.OutlineTransparency = 0
-        highlight.Parent = pet
-        
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "PetESP"
-        billboard.Size = UDim2.new(0, 220, 0, 50)
-        billboard.StudsOffset = Vector3.new(0, 3, 0)
-        billboard.AlwaysOnTop = true
-        billboard.Parent = part
-        
-        local nameLabel = Instance.new("TextLabel", billboard)
-        nameLabel.Size = UDim2.new(1, 0, 0.6, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = "🐾 " .. pet.Name
-        nameLabel.TextColor3 = petColor
-        nameLabel.Font = Enum.Font.GothamBlack
-        nameLabel.TextSize = 13
-        nameLabel.TextStrokeTransparency = 0
-        nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-        
-        local typeLabel = Instance.new("TextLabel", billboard)
-        typeLabel.Size = UDim2.new(1, 0, 0.4, 0)
-        typeLabel.Position = UDim2.new(0, 0, 0.6, 0)
-        typeLabel.BackgroundTransparency = 1
-        typeLabel.Text = "[" .. petType .. "]"
-        typeLabel.TextColor3 = petColor
-        typeLabel.Font = Enum.Font.GothamBold
-        typeLabel.TextSize = 11
-        typeLabel.TextStrokeTransparency = 0
-        typeLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-        
-        espCache[pet] = {Highlight = highlight, Billboard = billboard, Type = petType}
-    end)
-end
-
--- ==========================================
--- SECTION 1: 🎮 CHỨC NĂNG PHỤ
--- ==========================================
-AddSection("🎮 CHỨC NĂNG PHỤ")
-
-AddButton("🏠 Teleport Về Home", Color3.fromRGB(0, 200, 255), function()
+AddButton(MainTab, "🏠 Teleport Về Home", Color3.fromRGB(0, 150, 200), function()
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if root then
         root.CFrame = CFrame.new(Vector3.new(3.9, 16.9, -2894))
@@ -857,8 +612,7 @@ AddButton("🏠 Teleport Về Home", Color3.fromRGB(0, 200, 255), function()
     end
 end)
 
--- CHẠY NHANH MƯỢT MÀ
-AddToggle("🏃 Chạy Nhanh", function(state)
+local speedToggle = AddToggle(MainTab, "🏃 Chạy Nhanh", function(state)
     speedEnabled = state
     showNotification(state and "✅ Đã bật Chạy Nhanh!" or "❌ Đã tắt Chạy Nhanh!")
     
@@ -876,8 +630,7 @@ AddToggle("🏃 Chạy Nhanh", function(state)
                     local currentSpeed = hum.WalkSpeed
                     
                     if math.abs(currentSpeed - targetSpeed) > 1 then
-                        local step = (targetSpeed - currentSpeed) * 0.2
-                        hum.WalkSpeed = currentSpeed + step
+                        hum.WalkSpeed = currentSpeed + (targetSpeed - currentSpeed) * 0.2
                     else
                         hum.WalkSpeed = targetSpeed
                     end
@@ -902,20 +655,22 @@ AddToggle("🏃 Chạy Nhanh", function(state)
     end
 end)
 
-AddInput("⚙️ Tốc Độ Chạy:", config.walkSpeed, function(v)
+AddInput(MainTab, "Tốc Độ Chạy", config.walkSpeed, function(v)
     config.walkSpeed = v
+    if speedEnabled then
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = v end
+    end
     showNotification("✅ Tốc độ chạy: " .. v)
 end)
 
--- NHẢY CAO MƯỢT
 local jumpEnabled = false
-
-AddToggle("🦘 Nhảy Cao", function(state)
+AddToggle(MainTab, "🦘 Nhảy Cao", function(state)
     jumpEnabled = state
     showNotification(state and "✅ Đã bật Nhảy Cao!" or "❌ Đã tắt Nhảy Cao!")
 end)
 
-AddInput("⚙️ Lực Nhảy:", config.jumpPower, function(v)
+AddInput(MainTab, "Lực Nhảy", config.jumpPower, function(v)
     config.jumpPower = v
     showNotification("✅ Lực nhảy: " .. v)
 end)
@@ -931,21 +686,52 @@ UserInputService.JumpRequest:Connect(function()
 end)
 
 -- ==========================================
--- SECTION 2: 👁️ ĐỊNH VỊ (ESP)
+-- TAB 2: 👁️ ESP
 -- ==========================================
-AddSection("👁️ ĐỊNH VỊ (ESP)")
+local EspTab = CreateTab("ESP", "👁️")
 
-AddToggle("👤 Định Vị Người Chơi", function(state)
-    espPlayersEnabled = state
+AddSection(EspTab, "ĐỊNH VỊ")
+
+AddToggle(EspTab, "👤 Định Vị Người Chơi", function(state)
+    espPlayersEnabled2 = state
     showNotification(state and "✅ Đã bật Định Vị Người Chơi!" or "❌ Đã tắt!")
     
     if state then
         task.spawn(function()
-            while espPlayersEnabled do
+            while espPlayersEnabled2 do
                 pcall(function()
                     for _, player in ipairs(Players:GetPlayers()) do
                         if player ~= LocalPlayer then
-                            applyPlayerESP(player)
+                            local char = player.Character
+                            if char then
+                                local head = char:FindFirstChild("Head")
+                                if head and not head:FindFirstChild("PlayerESP") then
+                                    local highlight = Instance.new("Highlight")
+                                    highlight.Name = "PlayerESP_Highlight"
+                                    highlight.FillColor = Color3.fromRGB(255, 100, 100)
+                                    highlight.FillTransparency = 0.7
+                                    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                                    highlight.OutlineTransparency = 0
+                                    highlight.Parent = char
+                                    
+                                    local billboard = Instance.new("BillboardGui")
+                                    billboard.Name = "PlayerESP"
+                                    billboard.Size = UDim2.new(0, 200, 0, 35)
+                                    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                                    billboard.AlwaysOnTop = true
+                                    billboard.Parent = head
+                                    
+                                    local nameLabel = Instance.new("TextLabel", billboard)
+                                    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+                                    nameLabel.BackgroundTransparency = 1
+                                    nameLabel.Text = "👤 " .. player.Name
+                                    nameLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                                    nameLabel.Font = Enum.Font.GothamBlack
+                                    nameLabel.TextSize = 14
+                                    nameLabel.TextStrokeTransparency = 0
+                                    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                                end
+                            end
                         end
                     end
                 end)
@@ -970,92 +756,285 @@ AddToggle("👤 Định Vị Người Chơi", function(state)
     end
 end)
 
-AddToggle("🐾 Định Vị Thú Bình Thường", function(state)
-    espNormalPetsEnabled = state
-    showNotification(state and "✅ Đã bật Định Vị Thú Bình Thường!" or "❌ Đã tắt!")
-    
-    if state then
-        task.spawn(function()
-            while espNormalPetsEnabled do
-                pcall(function()
-                    for _, obj in ipairs(game:GetDescendants()) do
-                        pcall(function()
-                            if obj:IsA("Tool") and obj:GetAttribute("PET_UUID") then
-                                local name = obj.Name:lower()
-                                local isRare = name:find("mythic") or name:find("divine") 
-                                    or name:find("boss") or name:find("secret") 
-                                    or name:find("legendary")
-                                if not isRare then applyPetESP(obj, false) end
-                            end
-                        end)
-                    end
-                end)
-                task.wait(3)
+AddButton(EspTab, "🗑️ Xóa ESP Người Chơi", Color3.fromRGB(200, 50, 50), function()
+    espPlayersEnabled2 = false
+    for _, player in ipairs(Players:GetPlayers()) do
+        pcall(function()
+            local char = player.Character
+            if char then
+                local hl = char:FindFirstChild("PlayerESP_Highlight")
+                if hl then hl:Destroy() end
+                local head = char:FindFirstChild("Head")
+                if head then
+                    local bb = head:FindFirstChild("PlayerESP")
+                    if bb then bb:Destroy() end
+                end
             end
         end)
-    else
-        for pet, espData in pairs(espCache) do
-            pcall(function()
-                if espData.Type == "NORMAL" then
-                    if espData.Highlight then espData.Highlight:Destroy() end
-                    if espData.Billboard then espData.Billboard:Destroy() end
-                    espCache[pet] = nil
-                end
-            end)
-        end
     end
-end)
-
-AddToggle("👑 Định Vị Thú Hiếm", function(state)
-    espRarePetsEnabled = state
-    showNotification(state and "✅ Đã bật Định Vị Thú Hiếm!" or "❌ Đã tắt!")
-    
-    if state then
-        task.spawn(function()
-            while espRarePetsEnabled do
-                pcall(function()
-                    for _, obj in ipairs(game:GetDescendants()) do
-                        pcall(function()
-                            if obj:IsA("Tool") and obj:GetAttribute("PET_UUID") then
-                                local name = obj.Name:lower()
-                                local isRare = name:find("mythic") or name:find("mythical") 
-                                    or name:find("divine") or name:find("boss") 
-                                    or name:find("secret") or name:find("legendary")
-                                if isRare then applyPetESP(obj, true) end
-                            end
-                        end)
-                    end
-                end)
-                task.wait(3)
-            end
-        end)
-    else
-        for pet, espData in pairs(espCache) do
-            pcall(function()
-                if espData.Type ~= "NORMAL" and espData.Type ~= "PLAYER" then
-                    if espData.Highlight then espData.Highlight:Destroy() end
-                    if espData.Billboard then espData.Billboard:Destroy() end
-                    espCache[pet] = nil
-                end
-            end)
-        end
-    end
-end)
-
-AddButton("🗑️ Xóa Tất Cả ESP", Color3.fromRGB(200, 50, 50), function()
-    espPlayersEnabled = false
-    espNormalPetsEnabled = false
-    espRarePetsEnabled = false
-    clearESP()
-    showNotification("✅ Đã xóa tất cả ESP!")
+    showNotification("✅ Đã xóa ESP!")
 end)
 
 -- ==========================================
--- SECTION 3: 💰 SELL PETS
+-- TAB 3: 🏝️ TELEPORT
 -- ==========================================
-AddSection("💰 SELL PETS")
+local TpTab = CreateTab("Teleport", "🏝️")
 
-AddButton("💰 Mở Sell Pets", Color3.fromRGB(255, 200, 0), function()
+AddSection(TpTab, "ĐẢO")
+AddInput(TpTab, "Tốc Độ Bay", config.islandFlySpeed, function(v)
+    config.islandFlySpeed = v
+    showNotification("✅ Tốc độ bay: " .. v)
+end)
+
+AddInput(TpTab, "Độ Cao Bay", config.islandFlyHeight, function(v)
+    config.islandFlyHeight = v
+    showNotification("✅ Độ cao: " .. v)
+end)
+
+local function stopFlying()
+    isFlyingToIsland = false
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+    end
+end
+
+local function bypassTeleport(targetPos, name)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    task.wait(0.05)
+    
+    showNotification("⚡ Bypass TP đến " .. name .. "...")
+    
+    local oldCFrame = root.CFrame
+    local finalPos = Vector3.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+    
+    root.CFrame = CFrame.new(root.Position + Vector3.new(0, 500, 0))
+    task.wait(0.1)
+    
+    root.CFrame = CFrame.new(finalPos)
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    task.wait(0.15)
+    
+    local distanceMoved = (root.Position - oldCFrame.Position).Magnitude
+    local expectedDistance = (oldCFrame.Position - finalPos).Magnitude
+    
+    if expectedDistance > 50 and distanceMoved < expectedDistance * 0.5 then
+        task.wait(0.1)
+        root.CFrame = CFrame.new(finalPos + Vector3.new(0, 2, 0))
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        task.wait(0.15)
+    end
+    
+    task.wait(0.2)
+    
+    local finalDistance = (root.Position - finalPos).Magnitude
+    if finalDistance < 20 then
+        showNotification("✅ Đã đến " .. name .. "!")
+    else
+        root.CFrame = CFrame.new(finalPos)
+        task.wait(0.1)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        showNotification("⚠️ Đã thử lại " .. name)
+    end
+end
+
+local function smoothFlyToPosition(targetPos, name)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    task.wait(0.1)
+    
+    isFlyingToIsland = true
+    hum.PlatformStand = true
+    
+    showNotification("🕊️ Đang bay đến " .. name .. "...")
+    
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.P = 1250
+    bodyVelocity.Parent = root
+    
+    local bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+    bodyGyro.D = 500
+    bodyGyro.P = 100000
+    bodyGyro.CFrame = root.CFrame
+    bodyGyro.Parent = root
+    
+    local startPos = root.Position
+    local flyHeight = math.max(startPos.Y, targetPos.Y) + config.islandFlyHeight
+    
+    local phase = "UP"
+    local flySpeed = config.islandFlySpeed
+    
+    local flyConn
+    flyConn = RunService.RenderStepped:Connect(function(dt)
+        if not isFlyingToIsland then
+            if flyConn then flyConn:Disconnect() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if bodyGyro then bodyGyro:Destroy() end
+            return
+        end
+        
+        pcall(function()
+            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not currentRoot then return end
+            
+            local currentPos = currentRoot.Position
+            local cam = workspace.CurrentCamera
+            
+            bodyGyro.CFrame = CFrame.new(currentPos, currentPos + cam.CFrame.LookVector)
+            
+            if phase == "UP" then
+                local heightDiff = flyHeight - currentPos.Y
+                if heightDiff > 5 then
+                    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+                else
+                    phase = "HORIZONTAL"
+                end
+            elseif phase == "HORIZONTAL" then
+                local horizontalTarget = Vector3.new(targetPos.X, flyHeight, targetPos.Z)
+                local horizontalDiff = horizontalTarget - currentPos
+                local horizontalDist = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Magnitude
+                
+                if horizontalDist > 10 then
+                    local direction = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Unit
+                    bodyVelocity.Velocity = direction * flySpeed
+                    
+                    local yDiff = flyHeight - currentPos.Y
+                    bodyVelocity.Velocity = bodyVelocity.Velocity + Vector3.new(0, yDiff * 3, 0)
+                else
+                    phase = "DOWN"
+                end
+            elseif phase == "DOWN" then
+                local targetY = targetPos.Y + 5
+                local yDiff = targetY - currentPos.Y
+                
+                if yDiff < -5 then
+                    bodyVelocity.Velocity = Vector3.new(0, -flySpeed * 0.6, 0)
+                else
+                    isFlyingToIsland = false
+                    
+                    if flyConn then flyConn:Disconnect() end
+                    if bodyVelocity then bodyVelocity:Destroy() end
+                    if bodyGyro then bodyGyro:Destroy() end
+                    
+                    hum.PlatformStand = false
+                    currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+                    currentRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    
+                    showNotification("✅ Đã đến " .. name .. "!")
+                end
+            end
+        end)
+    end)
+    
+    task.delay(20, function()
+        if isFlyingToIsland then
+            stopFlying()
+            if flyConn then flyConn:Disconnect() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if bodyGyro then bodyGyro:Destroy() end
+            
+            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentRoot then
+                currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+            end
+            showNotification("⚠️ Bay timeout!")
+        end
+    end)
+end
+
+local function flyToPosition(targetPos, name)
+    if BYPASS_TP then
+        bypassTeleport(targetPos, name)
+    else
+        smoothFlyToPosition(targetPos, name)
+    end
+end
+
+local islandList = {
+    {Name = "🐉 Dragon Island", Position = Vector3.new(4.5, 918.5, -2917.4)},
+    {Name = "🐝 Bee Island", Position = Vector3.new(101.6, 14.1, -1152.2)},
+    {Name = "🏔️ Mountain Heights", Position = Vector3.new(-1611.9, 5.8, -5013.9)},
+    {Name = "🧸 Plushie Island", Position = Vector3.new(2300.6, 15.5, -249.7)},
+    {Name = "☁️ Cloud Island", Position = Vector3.new(-9667.8, 5328, -1339.2)},
+    {Name = "🌅 Sunken Island", Position = Vector3.new(2071.2, 11, -2628.4)},
+    {Name = "⚓ Lost Docks", Position = Vector3.new(1411.7, 16.3, -4400)},
+    {Name = "🌊 Forgotten Depths", Position = Vector3.new(12.7, 6.4, -4945.5)},
+    {Name = "🦁 Safari Island", Position = Vector3.new(-2243.8, 9.9, -2838.8)},
+    {Name = "🌋 Volcano Island", Position = Vector3.new(-2283.2, 7.3, -1883.3)},
+    {Name = "🦕 Dino Island", Position = Vector3.new(-1717.4, 964.2, -5122.7)},
+    {Name = "⏳ Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
+}
+
+for _, island in ipairs(islandList) do
+    AddButton(TpTab, island.Name, Color3.fromRGB(0, 130, 110), function()
+        flyToPosition(island.Position, island.Name)
+    end)
+end
+
+AddButton(TpTab, "🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
+    stopFlying()
+    showNotification("🛑 Đã dừng!")
+end)
+
+AddSection(TpTab, "LƯU VỊ TRÍ")
+AddButton(TpTab, "💾 Lưu Vị Trí Hiện Tại", Color3.fromRGB(0, 130, 180), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        savedPosition = root.CFrame
+        showNotification("✅ Đã lưu vị trí!")
+    end
+end)
+
+AddButton(TpTab, "📍 Teleport Đến Vị Trí Đã Lưu", Color3.fromRGB(0, 180, 90), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root and savedPosition then
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        root.CFrame = savedPosition
+        task.wait(0.05)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        showNotification("✅ Đã teleport!")
+    else
+        showNotification("❌ Chưa lưu vị trí!")
+    end
+end)
+
+AddButton(TpTab, "🕊️ Bay/TP Đến Vị Trí Lưu", Color3.fromRGB(0, 180, 230), function()
+    if not savedPosition then
+        showNotification("❌ Hãy lưu vị trí trước!")
+        return
+    end
+    flyToPosition(savedPosition.Position, "Vị Trí Đã Lưu")
+end)
+
+-- ==========================================
+-- TAB 4: 💰 FARM
+-- ==========================================
+local FarmTab = CreateTab("Farm", "💰")
+
+AddSection(FarmTab, "SELL PETS")
+AddButton(FarmTab, "💰 Mở Sell Pets(khoảng cách)", Color3.fromRGB(230, 180, 0), function()
     pcall(function()
         local opened = false
         for _, obj in ipairs(workspace:GetDescendants()) do
@@ -1091,24 +1070,100 @@ AddButton("💰 Mở Sell Pets", Color3.fromRGB(255, 200, 0), function()
     end)
 end)
 
+AddSection(FarmTab, "TELEPORT QUẢ")
+AddButton(FarmTab, "🍎 Pepper", Color3.fromRGB(230, 50, 50), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local items = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            local objName = obj.Name:lower()
+            if objName:find("pepper") or objName:find("chili") then
+                if obj:IsA("BasePart") then table.insert(items, obj) end
+            end
+        end)
+    end
+    if #items > 0 then
+        root.CFrame = CFrame.new(items[1].Position + Vector3.new(0, 5, 0))
+        showNotification("✅ Đã teleport đến Pepper")
+    else
+        showNotification("❌ Không tìm thấy Pepper")
+    end
+end)
+
+AddButton(FarmTab, "🥥 Coconut", Color3.fromRGB(130, 60, 15), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local items = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            local objName = obj.Name:lower()
+            if objName:find("coconut") or objName:find("coco") then
+                if obj:IsA("BasePart") then table.insert(items, obj) end
+            end
+        end)
+    end
+    if #items > 0 then
+        root.CFrame = CFrame.new(items[1].Position + Vector3.new(0, 5, 0))
+        showNotification("✅ Đã teleport đến Coconut")
+    else
+        showNotification("❌ Không tìm thấy Coconut")
+    end
+end)
+
+AddSection(FarmTab, "AUTO CLICK")
+local autoClicker = false
+
+local function startAutoClick()
+    task.spawn(function()
+        while autoClicker do
+            pcall(function()
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            end)
+            task.wait(config.autoClickInterval)
+        end
+    end)
+end
+
+local autoClickToggle = AddToggle(FarmTab, "🖱️ Auto Click (Ấn Y)", function(state)
+    autoClicker = state
+    showNotification(state and "✅ Đã bật Auto Click!" or "❌ Đã tắt Auto Click!")
+    if state then
+        startAutoClick()
+    end
+end)
+
+AddInput(FarmTab, "Tốc Độ Auto Click", config.autoClickInterval, function(v)
+    config.autoClickInterval = v
+    showNotification("✅ Tốc độ auto click: " .. v)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.Y then
+        autoClickToggle.SetState(not autoClickToggle.GetState())
+    end
+end)
+
 -- ==========================================
--- SECTION 4: 👥 TELEPORT NGƯỜI CHƠI
+-- TAB 5: 👥 PLAYERS
 -- ==========================================
-AddSection("👥 TELEPORT NGƯỜI CHƠI")
+local PlayersTab = CreateTab("Players", "👥")
+
+AddSection(PlayersTab, "TELEPORT NGƯỜI CHƠI")
 
 local playerBtnLayoutOrder = 100
+local playerButtons = {}
 
 local function refreshPlayerList()
-    for _, child in ipairs(Container:GetChildren()) do
-        if child:IsA("TextButton") and child:GetAttribute("IsPlayerBtn") then
-            child:Destroy()
-        end
+    for _, btn in ipairs(playerButtons) do
+        btn:Destroy()
     end
+    playerButtons = {}
     
-    local orderIndex = 1
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            local btn = AddButton("👤 " .. player.Name, Color3.fromRGB(35, 35, 45), function()
+            local btn = AddButton(PlayersTab, "👤 " .. player.Name, Color3.fromRGB(40, 40, 55), function()
                 pcall(function()
                     local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                     local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1120,19 +1175,16 @@ local function refreshPlayerList()
                         showNotification("❌ " .. player.Name .. " chưa spawn!")
                     end
                 end)
-            end, true)
-            
-            btn.LayoutOrder = playerBtnLayoutOrder + orderIndex
-            orderIndex = orderIndex + 1
+            end)
+            table.insert(playerButtons, btn)
         end
     end
 end
 
-local refreshBtn = AddButton("🔄 Làm Mới Danh Sách", Color3.fromRGB(0, 200, 100), function()
+AddButton(PlayersTab, "🔄 Làm Mới Danh Sách", Color3.fromRGB(0, 180, 90), function()
     refreshPlayerList()
     showNotification("✅ Đã làm mới danh sách!")
 end)
-refreshBtn.LayoutOrder = playerBtnLayoutOrder
 
 Players.PlayerAdded:Connect(function()
     task.wait(1)
@@ -1148,143 +1200,28 @@ task.wait(0.5)
 refreshPlayerList()
 
 -- ==========================================
--- SECTION 5: 🏝️ BAY ĐẾN ĐẢO
+-- TAB 6: ⚙️ SETTINGS
 -- ==========================================
-AddSection("🏝️ BAY ĐẾN ĐẢO")
+local SettingsTab = CreateTab("Settings", "⚙️")
 
-AddInput("⚡ Tốc Độ Bay:", config.islandFlySpeed, function(v)
-    config.islandFlySpeed = v
-    showNotification("✅ Tốc độ bay: " .. v)
-end)
+AddSection(SettingsTab, "SERVER")
 
-AddInput("📏 Độ Cao Bay:", config.islandFlyHeight, function(v)
-    config.islandFlyHeight = v
-    showNotification("✅ Độ cao: " .. v)
-end)
-
-local islandList = {
-    {Name = "🐉 Dragon Island", Position = Vector3.new(-37.6, 828.3, -2732.2)},
-    {Name = "🐝 Bee Island", Position = Vector3.new(101.6, 14.1, -1152.2)},
-    {Name = "🏔️ Mountain Heights", Position = Vector3.new(-1611.9, 5.8, -5013.9)},
-    {Name = "🧸 Plushie Island", Position = Vector3.new(2300.6, 15.5, -249.7)},
-    {Name = "☁️ Cloud Island", Position = Vector3.new(-9667.8, 5328, -1339.2)},
-    {Name = "🌅 Sunken Island", Position = Vector3.new(2071.2, 11, -2628.4)},
-    {Name = "⚓ Lost Docks", Position = Vector3.new(1411.7, 16.3, -4400)},
-    {Name = "🌊 Forgotten Depths", Position = Vector3.new(12.7, 6.4, -4945.5)},
-    {Name = "🦁 Safari Island", Position = Vector3.new(-2243.8, 9.9, -2838.8)},
-    {Name = "🌋 Volcano Island", Position = Vector3.new(-2283.2, 7.3, -1883.3)},
-    {Name = "🦕 Dino Island", Position = Vector3.new(-1717.4, 964.2, -5122.7)},
-    {Name = "⏳ Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
-}
-
-for _, island in ipairs(islandList) do
-    AddButton("🚁 " .. island.Name, Color3.fromRGB(0, 150, 130), function()
-        flyToExactPosition(island.Position, island.Name)
-    end)
-end
-
-AddButton("🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
-    stopFlying()
-    showNotification("🛑 Đã dừng bay!")
-end)
-
--- ==========================================
--- SECTION 6: 💾 LƯU VỊ TRÍ
--- ==========================================
-AddSection("💾 LƯU VỊ TRÍ")
-
-AddButton("💾 Lưu Vị Trí Hiện Tại", Color3.fromRGB(0, 150, 200), function()
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if root then
-        savedPosition = root.CFrame
-        showNotification("✅ Đã lưu vị trí!")
-    end
-end)
-
-AddButton("📍 Teleport Đến Vị Trí Đã Lưu", Color3.fromRGB(0, 200, 100), function()
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if root and savedPosition then
-        root.CFrame = savedPosition
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        showNotification("✅ Đã teleport!")
-    else
-        showNotification("❌ Chưa lưu vị trí!")
-    end
-end)
-
-AddInput("⚡ Tốc Độ Bay Đến Vị Trí Lưu:", config.flyToSavedSpeed, function(v)
-    config.flyToSavedSpeed = v
-    showNotification("✅ Tốc độ bay: " .. v)
-end)
-
-AddButton("🕊️ Bay Đến Vị Trí Đã Lưu", Color3.fromRGB(0, 200, 255), function()
-    if not savedPosition then
-        showNotification("❌ Hãy lưu vị trí trước!")
-        return
-    end
-    local oldSpeed = config.islandFlySpeed
-    config.islandFlySpeed = config.flyToSavedSpeed
-    flyToExactPosition(savedPosition.Position, "Vị Trí Đã Lưu")
-    task.delay(10, function()
-        config.islandFlySpeed = oldSpeed
-    end)
-end)
-
--- ==========================================
--- SECTION 7: 🖱️ AUTO CLICK
--- ==========================================
-AddSection("🖱️ AUTO CLICK")
-
-local autoClicker = false
-
-local autoClickToggle = AddToggle("🖱️ Auto Click (Ấn Y)", function(state)
-    autoClicker = state
-    showNotification(state and "✅ Đã bật Auto Click!" or "❌ Đã tắt Auto Click!")
-    if state then
-        task.spawn(function()
-            while autoClicker do
-                pcall(function()
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                end)
-                task.wait(config.autoClickInterval)
-            end
-        end)
-    end
-end)
-
-AddInput("⚙️ Tốc Độ Auto Click:", config.autoClickInterval, function(v)
-    config.autoClickInterval = v
-    showNotification("✅ Tốc độ auto click: " .. v)
-end)
-
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.Y then
-        autoClickToggle.SetState(not autoClickToggle.GetState())
-    end
-end)
-
--- ==========================================
--- SECTION 8: 🔗 SERVER ID
--- ==========================================
-AddSection("🔗 SERVER ID")
-
-AddButton("📋 Sao Chép ID Server", Color3.fromRGB(0, 150, 255), function()
+AddButton(SettingsTab, "📋 Sao Chép ID Server", Color3.fromRGB(0, 130, 230), function()
     local serverId = game.JobId
     if setclipboard then setclipboard(serverId) end
     showNotification("📋 ID: " .. serverId)
 end)
 
-local ServerIdBox = Instance.new("TextBox", Container)
-ServerIdBox.Size = UDim2.new(1, 0, 0, buttonHeight)
-ServerIdBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+local ServerIdBox = Instance.new("TextBox", SettingsTab)
+ServerIdBox.Size = UDim2.new(1, 0, 0, 38)
+ServerIdBox.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
 ServerIdBox.PlaceholderText = "Nhập ID Server..."
 ServerIdBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 ServerIdBox.Font = Enum.Font.GothamBold
-ServerIdBox.TextSize = isMobile and 12 or 11
+ServerIdBox.TextSize = 12
 Instance.new("UICorner", ServerIdBox).CornerRadius = UDim.new(0, 8)
 
-AddButton("🚀 Gia Nhập Server ID", Color3.fromRGB(0, 200, 100), function()
+AddButton(SettingsTab, "🚀 Gia Nhập Server ID", Color3.fromRGB(0, 180, 90), function()
     local serverId = ServerIdBox.Text
     if serverId and serverId ~= "" then
         TeleportService:TeleportToPlaceInstance(game.PlaceId, serverId, LocalPlayer)
@@ -1293,12 +1230,9 @@ AddButton("🚀 Gia Nhập Server ID", Color3.fromRGB(0, 200, 100), function()
     end
 end)
 
--- ==========================================
--- SECTION 9: ⚙️ KHÁC
--- ==========================================
-AddSection("⚙️ KHÁC")
+AddSection(SettingsTab, "TỐI ƯU HÓA")
 
-AddButton("🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 200, 255), function()
+AddButton(SettingsTab, "🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 180, 230), function()
     pcall(function()
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 200
@@ -1323,16 +1257,20 @@ AddButton("🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 200, 255), func
     end)
 end)
 
-AddButton("⚡ Tăng FPS", Color3.fromRGB(160, 40, 200), function()
-    setfpscap(10000)
-    showNotification("⚡ Đã tăng FPS!")
+AddButton(SettingsTab, "⚡ Tăng FPS", Color3.fromRGB(140, 40, 180), function()
+    pcall(function()
+        setfpscap(9999)
+        showNotification("⚡ Đã tăng FPS!")
+    end)
 end)
 
-AddButton("🔄 Rejoin Server", Color3.fromRGB(40, 120, 80), function()
+AddSection(SettingsTab, "KHÁC")
+
+AddButton(SettingsTab, "🔄 Rejoin Server", Color3.fromRGB(40, 110, 70), function()
     TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
 end)
 
-AddButton("💀 Reset Nhân Vật", Color3.fromRGB(180, 90, 0), function()
+AddButton(SettingsTab, "💀 Reset Nhân Vật", Color3.fromRGB(160, 80, 0), function()
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
     if hum then hum.Health = 0 end
 end)
@@ -1340,22 +1278,40 @@ end)
 -- ==========================================
 -- TOGGLE BUTTON
 -- ==========================================
-ToggleButton.MouseEnter:Connect(function()
-    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 150, 90)}):Play()
-end)
-ToggleButton.MouseLeave:Connect(function()
-    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(15, 15, 20)}):Play()
-end)
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Position = UDim2.new(0, 15, 0.4, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+ToggleButton.Text = "⚓"
+ToggleButton.TextColor3 = Color3.fromRGB(138, 43, 226)
+ToggleButton.Font = Enum.Font.GothamBlack
+ToggleButton.TextSize = 22
+ToggleButton.ZIndex = 100
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Visible = false
+
+local tStroke = Instance.new("UIStroke", ToggleButton)
+tStroke.Color = Color3.fromRGB(138, 43, 226)
+tStroke.Thickness = 2.5
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
 ToggleButton.MouseButton1Click:Connect(function()
-    if menuUnlocked then MainFrame.Visible = not MainFrame.Visible end
+    MainFrame.Visible = not MainFrame.Visible
 end)
 ToggleButton.TouchTap:Connect(function()
-    if menuUnlocked then MainFrame.Visible = not MainFrame.Visible end
+    MainFrame.Visible = not MainFrame.Visible
 end)
 
-print("[Nghia Senpai Hub] Script đã tải thành công!")
-print("[✅] Anti-Detection: Multi-layer protection")
-print("[✅] Fix tất cả chức năng")
-print("[⚠️] Không đảm bảo 100% không bị ban")
-print("[📌] Sử dụng có trách nhiệm!")
+task.spawn(function()
+    task.wait(5.5)
+    ToggleButton.Visible = true
+end)
+
+print("=================================")
+print("⚓ NGHIA SENPAI HUB - BLOX FRUIT STYLE")
+print("=================================")
+print("📌 Ấn CTRL để bật/tắt menu")
+print("📌 Tên hub ở giữa thanh trên cùng")
+print("📌 Đã thêm Xuyên Tường (không xuyên đất)")
+print("=================================")
