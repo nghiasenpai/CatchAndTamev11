@@ -475,65 +475,21 @@ local config = {
 -- ==========================================
 -- HÀM XUYÊN TƯỜNG (KHÔNG XUYÊN ĐẤT)
 -- ==========================================
-local function enableNoclip()
-    if noclipConnection then
-        noclipConnection:Disconnect()
-    end
-    
-    noclipConnection = RunService.Stepped:Connect(function()
-        if not noclipEnabled then return end
-        
-        pcall(function()
-            local char = LocalPlayer.Character
-            if not char then return end
-            
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if not root then return end
-            
-            -- Raycast xuống dưới để tìm mặt đất
-            local rayOrigin = root.Position
-            local rayDirection = Vector3.new(0, -10, 0)
-            
-            local raycastParams = RaycastParams.new()
-            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-            raycastParams.FilterDescendantsInstances = {char}
-            
-            local rayResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-            
-            -- Nếu đang ở gần mặt đất (< 0 studs) → BẬT collision
-            -- Nếu ở trên cao → TẮT collision (xuyên tường)
-            local nearGround = rayResult and rayResult.Distance < 5
-            
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    if nearGround then
-                        part.CanCollide = true
-                    else
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end)
-    end)
-end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-local function disableNoclip()
-    if noclipConnection then
-        noclipConnection:Disconnect()
-        noclipConnection = nil
-    end
-    
-    pcall(function()
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-        end
-    end)
-end
+local player = Players.LocalPlayer
+
+RunService.Stepped:Connect(function()
+	local nhanVat = player.Character
+	if not nhanVat then return end
+	
+	for _, boPhan in ipairs(nhanVat:GetDescendants()) do
+		if boPhan:IsA("BasePart") then
+			boPhan.CanCollide = false
+		end
+	end
+end)
 
 -- ==========================================
 -- LOADING ANIMATION
@@ -1145,6 +1101,221 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
+local TpTab = CreateTab("TELEPORT RƯƠNG", "🏴‍☠️")
+
+AddSection(TpTab, "ĐẢO")
+AddInput(TpTab, "Tốc Độ Bay", config.islandFlySpeed, function(v)
+    config.islandFlySpeed = v
+    showNotification("✅ Tốc độ bay: " .. v)
+end)
+
+AddInput(TpTab, "Độ Cao Bay", config.islandFlyHeight, function(v)
+    config.islandFlyHeight = v
+    showNotification("✅ Độ cao: " .. v)
+end)
+
+local function stopFlying()
+    isFlyingToIsland = false
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+    end
+end
+
+local function bypassTeleport(targetPos, name)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    task.wait(0.05)
+    
+    showNotification("⚡ Bypass TP đến " .. name .. "...")
+    
+    local oldCFrame = root.CFrame
+    local finalPos = Vector3.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+    
+    root.CFrame = CFrame.new(root.Position + Vector3.new(0, 500, 0))
+    task.wait(0.1)
+    
+    root.CFrame = CFrame.new(finalPos)
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    task.wait(0.15)
+    
+    local distanceMoved = (root.Position - oldCFrame.Position).Magnitude
+    local expectedDistance = (oldCFrame.Position - finalPos).Magnitude
+    
+    if expectedDistance > 50 and distanceMoved < expectedDistance * 0.5 then
+        task.wait(0.1)
+        root.CFrame = CFrame.new(finalPos + Vector3.new(0, 2, 0))
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        task.wait(0.15)
+    end
+    
+    task.wait(0.2)
+    
+    local finalDistance = (root.Position - finalPos).Magnitude
+    if finalDistance < 20 then
+        showNotification("✅ Đã đến " .. name .. "!")
+    else
+        root.CFrame = CFrame.new(finalPos)
+        task.wait(0.1)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        showNotification("⚠️thử lại " .. name)
+    end
+end
+
+local function smoothFlyToPosition(targetPos, name)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    task.wait(0.1)
+    
+    isFlyingToIsland = true
+    hum.PlatformStand = true
+    
+    showNotification("🕊️ Đang bay đến " .. name .. "...")
+    
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.P = 1250
+    bodyVelocity.Parent = root
+    
+    local bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+    bodyGyro.D = 500
+    bodyGyro.P = 100000
+    bodyGyro.CFrame = root.CFrame
+    bodyGyro.Parent = root
+    
+    local startPos = root.Position
+    local flyHeight = math.max(startPos.Y, targetPos.Y) + config.islandFlyHeight
+    
+    local phase = "UP"
+    local flySpeed = config.islandFlySpeed
+    
+    local flyConn
+    flyConn = RunService.RenderStepped:Connect(function(dt)
+        if not isFlyingToIsland then
+            if flyConn then flyConn:Disconnect() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if bodyGyro then bodyGyro:Destroy() end
+            return
+        end
+        
+        pcall(function()
+            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not currentRoot then return end
+            
+            local currentPos = currentRoot.Position
+            local cam = workspace.CurrentCamera
+            
+            bodyGyro.CFrame = CFrame.new(currentPos, currentPos + cam.CFrame.LookVector)
+            
+            if phase == "UP" then
+                local heightDiff = flyHeight - currentPos.Y
+                if heightDiff > 5 then
+                    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+                else
+                    phase = "HORIZONTAL"
+                end
+            elseif phase == "HORIZONTAL" then
+                local horizontalTarget = Vector3.new(targetPos.X, flyHeight, targetPos.Z)
+                local horizontalDiff = horizontalTarget - currentPos
+                local horizontalDist = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Magnitude
+                
+                if horizontalDist > 10 then
+                    local direction = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Unit
+                    bodyVelocity.Velocity = direction * flySpeed
+                    
+                    local yDiff = flyHeight - currentPos.Y
+                    bodyVelocity.Velocity = bodyVelocity.Velocity + Vector3.new(0, yDiff * 3, 0)
+                else
+                    phase = "DOWN"
+                end
+            elseif phase == "DOWN" then
+                local targetY = targetPos.Y + 5
+                local yDiff = targetY - currentPos.Y
+                
+                if yDiff < -5 then
+                    bodyVelocity.Velocity = Vector3.new(0, -flySpeed * 0.6, 0)
+                else
+                    isFlyingToIsland = false
+                    
+                    if flyConn then flyConn:Disconnect() end
+                    if bodyVelocity then bodyVelocity:Destroy() end
+                    if bodyGyro then bodyGyro:Destroy() end
+                    
+                    hum.PlatformStand = false
+                    currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+                    currentRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    
+                    showNotification("✅ Đã đến " .. name .. "!")
+                end
+            end
+        end)
+    end)
+    
+    task.delay(20, function()
+        if isFlyingToIsland then
+            stopFlying()
+            if flyConn then flyConn:Disconnect() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if bodyGyro then bodyGyro:Destroy() end
+            
+            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentRoot then
+                currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+            end
+            showNotification("⚠️timeout!")
+        end
+    end)
+end
+
+local function flyToPosition(targetPos, name)
+    if BYPASS_TP then
+        bypassTeleport(targetPos, name)
+    else
+        smoothFlyToPosition(targetPos, name)
+    end
+end
+
+local islandList = {
+    {Name = "🐉 RƯƠNG Dragon Island", Position = Vector3.new(201.8, 934.8, -2999.8)},
+    {Name = "🐝 RƯƠNG Bee Island", Position = Vector3.new(105.6, 29.1, -942.2)},
+    {Name = "🧸 RƯƠNG Plushie Island", Position = Vector3.new(2251, -92.7, -275.3)},
+    {Name = "⚓ RƯƠNG Lost Docks", Position = Vector3.new(1229.8, -84.3, -4360.5)},
+    {Name = "🌊 RƯƠNG Forgotten Depths", Position = Vector3.new(6.7, -1725, -4956.8)},
+    {Name = "🦁 RƯƠNG Safari Island", Position = Vector3.new(-2533.9, 22, -2879.2)},
+    {Name = "🌋 RƯƠNG Volcano Island", Position = Vector3.new(-2391.6, -247.7, -1686.5)},
+    {Name = "⏳ RƯƠNG Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
+}
+
+for _, island in ipairs(islandList) do
+    AddButton(TpTab, island.Name, Color3.fromRGB(0, 130, 110), function()
+        flyToPosition(island.Position, island.Name)
+    end)
+end
+
+AddButton(TpTab, "🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
+    stopFlying()
+    showNotification("🛑 Đã dừng!")
+    end)
+
 -- ==========================================
 -- TAB 5: 👥 PLAYERS
 -- ==========================================
@@ -1163,7 +1334,7 @@ local function refreshPlayerList()
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            local btn = AddButton(PlayersTab, "👤(TELE NHỮNG NGƯỜI CHƠI TRÊN ĐẢO)" .. player.Name, Color3.fromRGB(40, 40, 55), function()
+            local btn = AddButton(PlayersTab, "👤" .. player.Name, Color3.fromRGB(40, 40, 55), function()
                 pcall(function()
                     local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                     local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
