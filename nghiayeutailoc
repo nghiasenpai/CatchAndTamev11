@@ -2,6 +2,7 @@
 -- SCRIPT [⚓] NGHIA SENPAI HUB - BLOX FRUIT STYLE
 -- HỖ TRỢ MOBILE + PC
 -- GIAO DIỆN ĐẸP NHƯ SCRIPT TRẢ PHÍ
+-- ĐÃ THÊM: TELE MERCHANT TRONG TAB FARM
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -18,6 +19,190 @@ local LocalPlayer = Players.LocalPlayer
 
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local isPC = not isMobile
+
+-- ==========================================
+-- STEALTH MODE - Giảm dấu hiệu bất thường khi bay
+-- KHÔNG chống ban. Chỉ giảm rubberband + giới hạn tốc độ
+-- ==========================================
+local STEALTH = {
+    Enabled = true,              -- Bật/tắt stealth
+    MaxSpeed = 150,              -- Tốc độ tối đa (studs/s) - khuyên 100-200
+    MaxHeight = 300,             -- Độ cao tối đa (studs)
+    SmoothFactor = 0.15,         -- Làm mượt gia tốc (0.1 - 0.3)
+    CheckInterval = 0.1,         -- Kiểm tra mỗi 0.1s
+    EnableSpeedLimit = true,     -- Giới hạn tốc độ
+    EnableHeightLimit = true,    -- Giới hạn độ cao
+    EnableAntiRubberband = true, -- Chống bị kéo về
+}
+
+local stealthConnection = nil
+local lastValidPos = nil
+local rubberbandCount = 0
+
+local function startStealth()
+    if stealthConnection then
+        stealthConnection:Disconnect()
+        stealthConnection = nil
+    end
+    
+    stealthConnection = RunService.Heartbeat:Connect(function()
+        if not STEALTH.Enabled then return end
+        
+        pcall(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+            
+            -- 1. GIỚI HẠN TỐC ĐỘ
+            if STEALTH.EnableSpeedLimit then
+                local vel = root.AssemblyLinearVelocity
+                if vel.Magnitude > STEALTH.MaxSpeed then
+                    root.AssemblyLinearVelocity = vel.Unit * STEALTH.MaxSpeed
+                end
+            end
+            
+            -- 2. GIỚI HẠN ĐỘ CAO
+            if STEALTH.EnableHeightLimit then
+                if root.Position.Y > STEALTH.MaxHeight then
+                    root.CFrame = CFrame.new(
+                        root.Position.X,
+                        STEALTH.MaxHeight,
+                        root.Position.Z
+                    )
+                end
+            end
+            
+            -- 3. CHỐNG RUBBERBAND (bị kéo về)
+            if STEALTH.EnableAntiRubberband and lastValidPos then
+                local movedDistance = (root.Position - lastValidPos).Magnitude
+                
+                -- Nếu bị kéo về quá xa trong 1 frame → đánh dấu rubberband
+                if movedDistance > 100 then
+                    rubberbandCount = rubberbandCount + 1
+                    -- Không teleport ngược, chỉ dừng lại
+                    if root.AssemblyLinearVelocity.Magnitude > 0 then
+                        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+            
+            -- Lưu vị trí hợp lệ
+            lastValidPos = root.Position
+        end)
+    end)
+end
+
+local function stopStealth()
+    if stealthConnection then
+        stealthConnection:Disconnect()
+        stealthConnection = nil
+    end
+end
+
+-- Khởi động Stealth Mode
+startStealth()
+
+-- Hàm để mày gọi khi cần (nếu script mày có UI)
+local function setStealthSpeed(newSpeed)
+    STEALTH.MaxSpeed = math.clamp(newSpeed, 50, 300)
+    print("[Stealth] Tốc độ mới:", STEALTH.MaxSpeed)
+end
+
+local function setStealthHeight(newHeight)
+    STEALTH.MaxHeight = math.clamp(newHeight, 50, 1000)
+    print("[Stealth] Độ cao mới:", STEALTH.MaxHeight)
+end
+
+local function toggleStealth(state)
+    STEALTH.Enabled = state
+    print("[Stealth]", state and "BẬT" or "TẮT")
+end
+
+-- In ra console để mày biết nó chạy
+print("=================================")
+print("✅ STEALTH MODE ĐÃ BẬT")
+print("📏 Tốc độ tối đa:", STEALTH.MaxSpeed)
+print("📐 Độ cao tối đa:", STEALTH.MaxHeight)
+print("=================================")
+
+-- ==========================================
+-- ANTI-FLING (Chống bị văng + giữ ổn định)
+-- ==========================================
+local flingConnection = nil
+
+local function enableAntiFling()
+    if flingConnection then flingConnection:Disconnect() end
+    
+    flingConnection = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not root or not hum then return end
+            
+            -- 1. Chống bị văng xa (fling detection)
+            local velocity = root.AssemblyLinearVelocity
+            if velocity.Magnitude > 500 then
+                root.AssemblyLinearVelocity = velocity.Unit * 500
+                root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+            
+            -- 2. Giữ nhân vật không bị ngã
+            if hum:GetState() == Enum.HumanoidStateType.FallingDown 
+                or hum:GetState() == Enum.HumanoidStateType.Ragdoll then
+                hum:ChangeState(Enum.HumanoidStateType.Running)
+            end
+            
+            -- 3. Chống bị physics đẩy lung tung
+            if root.RotVelocity.Magnitude > 50 then
+                root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+        end)
+    end)
+end
+
+enableAntiFling()
+
+-- ==========================================
+-- ANTI-KICK (Chống bị kick AFK + kick thường)
+-- ==========================================
+local VirtualUser = game:GetService("VirtualUser")
+local StarterGui = game:GetService("StarterGui")
+
+-- 1. Chống kick AFK (idle 20 phút)
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+-- 2. Chống kick do bị đẩy khỏi game (khi character load lại)
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    pcall(function()
+        -- Thông báo đã hồi sinh, không bị kick
+        StarterGui:SetCore("SendNotification", {
+            Title = "Anti-Kick",
+            Text = "Đã chống kick thành công!",
+            Duration = 2
+        })
+    end)
+end)
+
+-- 3. Giữ kết nối ổn định (chống timeout)
+task.spawn(function()
+    while task.wait(30) do
+        pcall(function()
+            -- Gửi ping nhẹ để giữ kết nối
+            game:GetService("ReplicatedStorage"):FindFirstChild("")
+        end)
+    end
+end)
 
 -- ==========================================
 -- ANTI-DETECTION
@@ -157,7 +342,6 @@ TitleGradient.Color = ColorSequence.new({
     ColorSequenceKeypoint.new(1, Color3.fromRGB(75, 0, 130))
 })
 
--- Tên hub căn giữa
 local TitleText = Instance.new("TextLabel", TitleBar)
 TitleText.Size = UDim2.new(1, -100, 1, 0)
 TitleText.Position = UDim2.new(0, 50, 0, 0)
@@ -168,7 +352,6 @@ TitleText.Font = Enum.Font.GothamBlack
 TitleText.TextSize = 15
 TitleText.TextXAlignment = Enum.TextXAlignment.Center
 
--- Nút đóng
 local CloseBtn = Instance.new("TextButton", TitleBar)
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
 CloseBtn.Position = UDim2.new(1, -40, 0, 7)
@@ -183,7 +366,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false 
 end)
 
--- Ấn CTRL để bật/tắt menu (cả LeftCtrl và RightCtrl)
 UserInputService.InputBegan:Connect(function(input, gpe)
     if not gpe then
         if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
@@ -458,9 +640,9 @@ local speedMaintainConnection = nil
 local DEFAULT_SPEED_RESET = 40
 local espPlayersEnabled2 = false
 
--- Biến xuyên tường
 local noclipEnabled = false
 local noclipConnection = nil
+local jumpEnabled = false
 
 local config = {
     walkSpeed = 100,
@@ -473,23 +655,35 @@ local config = {
 }
 
 -- ==========================================
--- HÀM XUYÊN TƯỜNG (KHÔNG XUYÊN ĐẤT)
+-- HÀM XUYÊN TƯỜNG (CHỈ XUYÊN TƯỜNG, KHÔNG XUYÊN ĐẤT)
 -- ==========================================
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local function enableNoclip()
+    if noclipConnection then noclipConnection:Disconnect() end
+    noclipConnection = RunService.Stepped:Connect(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end)
+end
 
-local player = Players.LocalPlayer
-
-RunService.Stepped:Connect(function()
-	local nhanVat = player.Character
-	if not nhanVat then return end
-	
-	for _, boPhan in ipairs(nhanVat:GetDescendants()) do
-		if boPhan:IsA("BasePart") then
-			boPhan.CanCollide = false
-		end
-	end
-end)
+local function disableNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
 
 -- ==========================================
 -- LOADING ANIMATION
@@ -541,17 +735,16 @@ end)
 local MainTab = CreateTab("Main", "🏠")
 
 AddSection(MainTab, "BYPASS TP")
-local bypassToggle = AddToggle(MainTab, "🚀 Bypass TP ", function(state)
+local bypassToggle = AddToggle(MainTab, "🚀 Bypass TP", function(state)
     BYPASS_TP = state
     showNotification(state and "⚡ Đã bật Bypass TP!" or "❌ Đã tắt Bypass TP")
 end)
 
 AddSection(MainTab, "CHỨC NĂNG CƠ BẢN")
 
--- XUYÊN TƯỜNG
-AddToggle(MainTab, "🚪 Xuyên Tường ", function(state)
+AddToggle(MainTab, "🚪 Xuyên Tường", function(state)
     noclipEnabled = state
-    showNotification(state and "✅ Đã bật Xuyên Tường (không xuyên đất)!" or "❌ Đã tắt Xuyên Tường!")
+    showNotification(state and "✅ Đã bật Xuyên Tường!" or "❌ Đã tắt Xuyên Tường!")
     
     if state then
         enableNoclip()
@@ -620,7 +813,6 @@ AddInput(MainTab, "Tốc Độ Chạy", config.walkSpeed, function(v)
     showNotification("✅ Tốc độ chạy: " .. v)
 end)
 
-local jumpEnabled = false
 AddToggle(MainTab, "🦘 Nhảy Cao", function(state)
     jumpEnabled = state
     showNotification(state and "✅ Đã bật Nhảy Cao!" or "❌ Đã tắt Nhảy Cao!")
@@ -1067,6 +1259,87 @@ AddButton(FarmTab, "🥥 Coconut", Color3.fromRGB(130, 60, 15), function()
     end
 end)
 
+-- ==========================================
+-- TELEPORT MERCHANT (THÊM VÀO TAB FARM)
+-- ==========================================
+AddSection(FarmTab, "TELEPORT MERCHANT")
+
+AddButton(FarmTab, "🧭 Tele Đến Merchant", Color3.fromRGB(230, 150, 0), function()
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if not root then
+        showNotification("❌ Nhân vật chưa spawn!")
+        return
+    end
+    
+    showNotification("🔍 Đang tìm Merchant...")
+    
+    local found = nil
+    local foundName = ""
+    
+    -- Quét workspace tìm NPC có tên chứa "merchant"
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            local objName = obj.Name:lower()
+            if objName:find("merchant") then
+                if obj:IsA("Model") or obj:IsA("BasePart") then
+                    found = obj
+                    foundName = obj.Name
+                end
+            end
+            -- Kiểm tra qua Humanoid
+            if obj:IsA("Humanoid") and obj.Parent then
+                local pName = obj.Parent.Name:lower()
+                if pName:find("merchant") then
+                    found = obj.Parent
+                    foundName = obj.Parent.Name
+                end
+            end
+        end)
+        if found then break end
+    end
+    
+    if not found then
+        showNotification("❌ Không tìm thấy Merchant trong map!")
+        return
+    end
+    
+    -- Lấy vị trí
+    local targetPos = nil
+    if found:IsA("BasePart") then
+        targetPos = found.Position
+    elseif found:IsA("Model") then
+        local primary = found.PrimaryPart 
+            or found:FindFirstChild("HumanoidRootPart") 
+            or found:FindFirstChildWhichIsA("BasePart")
+        if primary then
+            targetPos = primary.Position
+        end
+    end
+    
+    if not targetPos then
+        showNotification("❌ Không lấy được vị trí Merchant!")
+        return
+    end
+    
+    showNotification("✅ Tìm thấy: " .. foundName)
+    
+    -- Tele trực tiếp đến Merchant
+    root.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    task.wait(0.1)
+    root.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    
+    showNotification("✅ Đã tele đến " .. foundName .. "!")
+end)
+
+-- ==========================================
+-- TAB FARM - AUTO CLICK (tiếp tục)
+-- ==========================================
 AddSection(FarmTab, "AUTO CLICK")
 local autoClicker = false
 
@@ -1101,200 +1374,14 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
-local TpTab = CreateTab("TELEPORT RƯƠNG", "🏴‍☠️")
+-- ==========================================
+-- TAB 5: 🏴‍☠️ TELEPORT RƯƠNG
+-- ==========================================
+local ChestTab = CreateTab("Rương", "🏴‍☠️")
 
-AddSection(TpTab, "ĐẢO")
-AddInput(TpTab, "Tốc Độ Bay", config.islandFlySpeed, function(v)
-    config.islandFlySpeed = v
-    showNotification("✅ Tốc độ bay: " .. v)
-end)
+AddSection(ChestTab, "RƯƠNG ĐẢO")
 
-AddInput(TpTab, "Độ Cao Bay", config.islandFlyHeight, function(v)
-    config.islandFlyHeight = v
-    showNotification("✅ Độ cao: " .. v)
-end)
-
-local function stopFlying()
-    isFlyingToIsland = false
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if root then
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    end
-    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.PlatformStand = false
-    end
-end
-
-local function bypassTeleport(targetPos, name)
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    
-    if not root or not hum then return end
-    
-    stopFlying()
-    task.wait(0.05)
-    
-    showNotification("⚡ Bypass TP đến " .. name .. "...")
-    
-    local oldCFrame = root.CFrame
-    local finalPos = Vector3.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
-    
-    root.CFrame = CFrame.new(root.Position + Vector3.new(0, 500, 0))
-    task.wait(0.1)
-    
-    root.CFrame = CFrame.new(finalPos)
-    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    
-    task.wait(0.15)
-    
-    local distanceMoved = (root.Position - oldCFrame.Position).Magnitude
-    local expectedDistance = (oldCFrame.Position - finalPos).Magnitude
-    
-    if expectedDistance > 50 and distanceMoved < expectedDistance * 0.5 then
-        task.wait(0.1)
-        root.CFrame = CFrame.new(finalPos + Vector3.new(0, 2, 0))
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        task.wait(0.15)
-    end
-    
-    task.wait(0.2)
-    
-    local finalDistance = (root.Position - finalPos).Magnitude
-    if finalDistance < 20 then
-        showNotification("✅ Đã đến " .. name .. "!")
-    else
-        root.CFrame = CFrame.new(finalPos)
-        task.wait(0.1)
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        showNotification("⚠️thử lại " .. name)
-    end
-end
-
-local function smoothFlyToPosition(targetPos, name)
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    
-    if not root or not hum then return end
-    
-    stopFlying()
-    task.wait(0.1)
-    
-    isFlyingToIsland = true
-    hum.PlatformStand = true
-    
-    showNotification("🕊️ Đang bay đến " .. name .. "...")
-    
-    local bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
-    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    bodyVelocity.P = 1250
-    bodyVelocity.Parent = root
-    
-    local bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
-    bodyGyro.D = 500
-    bodyGyro.P = 100000
-    bodyGyro.CFrame = root.CFrame
-    bodyGyro.Parent = root
-    
-    local startPos = root.Position
-    local flyHeight = math.max(startPos.Y, targetPos.Y) + config.islandFlyHeight
-    
-    local phase = "UP"
-    local flySpeed = config.islandFlySpeed
-    
-    local flyConn
-    flyConn = RunService.RenderStepped:Connect(function(dt)
-        if not isFlyingToIsland then
-            if flyConn then flyConn:Disconnect() end
-            if bodyVelocity then bodyVelocity:Destroy() end
-            if bodyGyro then bodyGyro:Destroy() end
-            return
-        end
-        
-        pcall(function()
-            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if not currentRoot then return end
-            
-            local currentPos = currentRoot.Position
-            local cam = workspace.CurrentCamera
-            
-            bodyGyro.CFrame = CFrame.new(currentPos, currentPos + cam.CFrame.LookVector)
-            
-            if phase == "UP" then
-                local heightDiff = flyHeight - currentPos.Y
-                if heightDiff > 5 then
-                    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
-                else
-                    phase = "HORIZONTAL"
-                end
-            elseif phase == "HORIZONTAL" then
-                local horizontalTarget = Vector3.new(targetPos.X, flyHeight, targetPos.Z)
-                local horizontalDiff = horizontalTarget - currentPos
-                local horizontalDist = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Magnitude
-                
-                if horizontalDist > 10 then
-                    local direction = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Unit
-                    bodyVelocity.Velocity = direction * flySpeed
-                    
-                    local yDiff = flyHeight - currentPos.Y
-                    bodyVelocity.Velocity = bodyVelocity.Velocity + Vector3.new(0, yDiff * 3, 0)
-                else
-                    phase = "DOWN"
-                end
-            elseif phase == "DOWN" then
-                local targetY = targetPos.Y + 5
-                local yDiff = targetY - currentPos.Y
-                
-                if yDiff < -5 then
-                    bodyVelocity.Velocity = Vector3.new(0, -flySpeed * 0.6, 0)
-                else
-                    isFlyingToIsland = false
-                    
-                    if flyConn then flyConn:Disconnect() end
-                    if bodyVelocity then bodyVelocity:Destroy() end
-                    if bodyGyro then bodyGyro:Destroy() end
-                    
-                    hum.PlatformStand = false
-                    currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
-                    currentRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                    
-                    showNotification("✅ Đã đến " .. name .. "!")
-                end
-            end
-        end)
-    end)
-    
-    task.delay(20, function()
-        if isFlyingToIsland then
-            stopFlying()
-            if flyConn then flyConn:Disconnect() end
-            if bodyVelocity then bodyVelocity:Destroy() end
-            if bodyGyro then bodyGyro:Destroy() end
-            
-            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if currentRoot then
-                currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
-            end
-            showNotification("⚠️timeout!")
-        end
-    end)
-end
-
-local function flyToPosition(targetPos, name)
-    if BYPASS_TP then
-        bypassTeleport(targetPos, name)
-    else
-        smoothFlyToPosition(targetPos, name)
-    end
-end
-
-local islandList = {
+local chestList = {
     {Name = "🐉 RƯƠNG Dragon Island", Position = Vector3.new(201.8, 934.8, -2999.8)},
     {Name = "🐝 RƯƠNG Bee Island", Position = Vector3.new(105.6, 29.1, -942.2)},
     {Name = "🧸 RƯƠNG Plushie Island", Position = Vector3.new(2251, -92.7, -275.3)},
@@ -1305,25 +1392,24 @@ local islandList = {
     {Name = "⏳ RƯƠNG Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
 }
 
-for _, island in ipairs(islandList) do
-    AddButton(TpTab, island.Name, Color3.fromRGB(0, 130, 110), function()
-        flyToPosition(island.Position, island.Name)
+for _, chest in ipairs(chestList) do
+    AddButton(ChestTab, chest.Name, Color3.fromRGB(0, 130, 110), function()
+        flyToPosition(chest.Position, chest.Name)
     end)
 end
 
-AddButton(TpTab, "🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
+AddButton(ChestTab, "🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
     stopFlying()
     showNotification("🛑 Đã dừng!")
-    end)
+end)
 
 -- ==========================================
--- TAB 5: 👥 PLAYERS
+-- TAB 6: 👥 PLAYERS
 -- ==========================================
 local PlayersTab = CreateTab("Players", "👥")
 
 AddSection(PlayersTab, "TELEPORT NGƯỜI CHƠI")
 
-local playerBtnLayoutOrder = 100
 local playerButtons = {}
 
 local function refreshPlayerList()
@@ -1371,7 +1457,7 @@ task.wait(0.5)
 refreshPlayerList()
 
 -- ==========================================
--- TAB 6: ⚙️ SETTINGS
+-- TAB 7: ⚙️ SETTINGS
 -- ==========================================
 local SettingsTab = CreateTab("Settings", "⚙️")
 
@@ -1423,14 +1509,14 @@ AddButton(SettingsTab, "🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 18
             end)
         end
         
-        setfpscap(30)
+        if setfpscap then setfpscap(30) end
         showNotification("✅ Đã giảm đồ hoạ")
     end)
 end)
 
 AddButton(SettingsTab, "⚡ Tăng FPS", Color3.fromRGB(140, 40, 180), function()
     pcall(function()
-        setfpscap(9999)
+        if setfpscap then setfpscap(9999) end
         showNotification("⚡ Đã tăng FPS!")
     end)
 end)
@@ -1485,4 +1571,5 @@ print("=================================")
 print("📌 Ấn CTRL để bật/tắt menu")
 print("📌 Tên hub ở giữa thanh trên cùng")
 print("📌 Đã thêm Xuyên Tường (không xuyên đất)")
+print("📌 Đã thêm TELE MERCHANT trong tab Farm")
 print("=================================")
