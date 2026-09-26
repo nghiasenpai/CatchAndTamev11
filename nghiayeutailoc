@@ -20,6 +20,288 @@ local LocalPlayer = Players.LocalPlayer
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local isPC = not isMobile
 
+-- Hook __newindex - chặn game ghi đè hàm Kick
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldNewIndex = mt.__newindex
+        mt.__newindex = newcclosure(function(self, key, value)
+            if self == LocalPlayer and key == "Kick" then
+                showNotice("🛡️ ĐÃ CHẶN GHI ĐÈ", "Game cố ghi đè hàm Kick", Color3.fromRGB(200, 150, 30))
+                return nil
+            end
+            return oldNewIndex(self, key, value)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] Đã hook __newindex")
+    end)
+end
+
+-- ==========================================
+-- ANTI-KICK FULL (Chặn kick mọi ngả)
+-- Nối vào script, không cần menu
+-- ==========================================
+local StarterGui = game:GetService("StarterGui")
+local VirtualUser = game:GetService("VirtualUser")
+
+-- ==========================================
+-- 1. THÔNG BÁO
+-- ==========================================
+local function showNotice(title, text, color)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = 5
+        })
+    end)
+    
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+    local sg = pg:FindFirstChild("AntiKickUI")
+    if not sg then
+        sg = Instance.new("ScreenGui")
+        sg.Name = "AntiKickUI"
+        sg.ResetOnSpawn = false
+        sg.Parent = pg
+    end
+    
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 350, 0, 65)
+    frame.Position = UDim2.new(1, -370, 0, 20)
+    frame.BackgroundColor3 = color or Color3.fromRGB(30, 150, 50)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(150, 255, 180)
+    stroke.Thickness = 3
+    
+    local t = Instance.new("TextLabel", frame)
+    t.Size = UDim2.new(1, -20, 0, 25)
+    t.Position = UDim2.new(0, 10, 0, 5)
+    t.BackgroundTransparency = 1
+    t.Text = title
+    t.TextColor3 = Color3.fromRGB(255, 255, 255)
+    t.Font = Enum.Font.GothamBlack
+    t.TextSize = 14
+    t.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local d = Instance.new("TextLabel", frame)
+    d.Size = UDim2.new(1, -20, 0, 30)
+    d.Position = UDim2.new(0, 10, 0, 30)
+    d.BackgroundTransparency = 1
+    d.Text = text
+    d.TextColor3 = Color3.fromRGB(220, 255, 220)
+    d.Font = Enum.Font.GothamBold
+    d.TextSize = 11
+    d.TextWrapped = true
+    d.TextXAlignment = Enum.TextXAlignment.Left
+    d.TextYAlignment = Enum.TextYAlignment.Top
+    
+    task.delay(5, function()
+        if frame and frame.Parent then frame:Destroy() end
+    end)
+end
+
+-- ==========================================
+-- 2. HOOK HÀM KICK CỦA LOCALPLAYER
+-- ==========================================
+if hookfunction then
+    pcall(function()
+        local oldKick = hookfunction(LocalPlayer.Kick, function(self, ...)
+            local args = {...}
+            local reason = tostring(args[1] or "Không rõ")
+            showNotice("🛡️ ĐÃ CHẶN KICK", "Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+            return nil
+        end)
+        print("[Anti-Kick] Đã hook hàm Kick")
+    end)
+end
+
+-- ==========================================
+-- 3. HOOK __NAMECALL (bắt kick qua :Kick())
+-- ==========================================
+local mt = getrawmetatable and getrawmetatable(game)
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldNamecall = mt.__namecall
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            
+            if method == "Kick" and self == LocalPlayer then
+                local args = {...}
+                local reason = tostring(args[1] or "Không rõ")
+                showNotice("🛡️ ĐÃ CHẶN KICK", "Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+                return nil
+            end
+            
+            return oldNamecall(self, ...)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] Đã hook __namecall")
+    end)
+end
+
+-- ==========================================
+-- 4. HOOK __INDEX (bắt kick qua biến cục bộ)
+-- ==========================================
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldIndex = mt.__index
+        mt.__index = newcclosure(function(self, key)
+            if self == LocalPlayer and key == "Kick" then
+                return function(...)
+                    local args = {...}
+                    local reason = tostring(args[1] or "Không rõ")
+                    showNotice("🛡️ ĐÃ CHẶN KICK", "Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+                    return nil
+                end
+            end
+            return oldIndex(self, key)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] Đã hook __index")
+    end)
+end
+
+-- ==========================================
+-- 5. CHỐNG KICK AFK
+-- ==========================================
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+print("=================================")
+print("🛡️ ANTI-KICK FULL LOADED")
+print("=================================")
+print("✅ Hook hàm Kick")
+print("✅ Hook __namecall")
+print("✅ Hook __index")
+print("✅ Chống AFK")
+print("=================================")
+
+-- ==========================================
+-- ANTI-KICK THẬT (Chặn kick từ server)
+-- + Thông báo khi phát hiện kick
+-- ==========================================
+local StarterGui = game:GetService("StarterGui")
+
+-- Hàm hiện thông báo
+local function showNotice(text, color)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "🛡️ ANTI-KICK",
+            Text = text,
+            Duration = 5
+        })
+    end)
+    
+    -- Hiện khung trên màn hình
+    local sg = game.Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("AntiKickNotice")
+    if not sg then
+        sg = Instance.new("ScreenGui")
+        sg.Name = "AntiKickNotice"
+        sg.ResetOnSpawn = false
+        sg.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+    
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 350, 0, 60)
+    frame.Position = UDim2.new(1, -370, 0, 20)
+    frame.BackgroundColor3 = color or Color3.fromRGB(30, 150, 50)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(100, 255, 150)
+    stroke.Thickness = 3
+    
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -20, 0, 30)
+    title.Position = UDim2.new(0, 10, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "🛡️ ANTI-KICK"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local textLabel = Instance.new("TextLabel", frame)
+    textLabel.Size = UDim2.new(1, -20, 0, 25)
+    textLabel.Position = UDim2.new(0, 10, 0, 32)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(220, 255, 220)
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 11
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    task.delay(5, function()
+        if frame and frame.Parent then frame:Destroy() end
+    end)
+end
+
+-- ==========================================
+-- CHẶN KICK TỪ SERVER
+-- ==========================================
+local mt = getrawmetatable and getrawmetatable(game)
+if mt and setreadonly and hookfunction then
+    setreadonly(mt, false)
+    local oldNamecall = mt.__namecall
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        
+        if method == "Kick" and self == LocalPlayer then
+            local args = {...}
+            local reason = tostring(args[1] or "Không rõ")
+            
+            -- Hiện thông báo
+            showNotice("Đã chặn kick! Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+            
+            -- CHẶN KICK - không cho kick
+            return nil
+        end
+        
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+    print("[Anti-Kick] Đã hook - chặn kick từ server")
+else
+    -- Fallback nếu executor không hỗ trợ
+    print("[Anti-Kick] Executor không hỗ trợ hook - dùng cách khác")
+end
+
+-- ==========================================
+-- CHỐNG KICK AFK
+-- ==========================================
+local VirtualUser = game:GetService("VirtualUser")
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+print("[Anti-Kick] Đã bật toàn bộ")
+
+-- ==========================================
+-- ANTI-AFK KICK (Chống bị kick khi treo máy)
+-- Nối vào script, không cần menu
+-- ==========================================
+local VirtualUser = game:GetService("VirtualUser")
+
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
 -- ==========================================
 -- STEALTH MODE - Giảm dấu hiệu bất thường khi bay
 -- KHÔNG chống ban. Chỉ giảm rubberband + giới hạn tốc độ
@@ -1132,6 +1414,7 @@ local islandList = {
     {Name = "🌋 Volcano Island", Position = Vector3.new(-2283.2, 7.3, -1883.3)},
     {Name = "🦕 Dino Island", Position = Vector3.new(-1717.4, 964.2, -5122.7)},
     {Name = "⏳ Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
+   {Name = "🛴Toy Island", Position = Vector3.new(2612.3, 47.3, 427.8)},
 }
 
 for _, island in ipairs(islandList) do
