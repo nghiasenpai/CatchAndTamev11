@@ -1559,7 +1559,7 @@ AddSection(ChestTab, "RƯƠNG ĐẢO")
 
 local chestList = {
     {Name = "🐉 RƯƠNG Dragon Island", Position = Vector3.new(201.8, 934.8, -2999.8)},
-    {Name = "🐝 RƯƠNG Bee Island", Position = Vector3.new(105.6, 29.1, -942.2)},
+    {Name = "🐝 RƯƠNG Forgotten Frams", Position = Vector3.new(102.5, -29.6, -962.3)},
     {Name = "🧸 RƯƠNG Plushie Island", Position = Vector3.new(2251, -92.7, -275.3)},
     {Name = "⚓ RƯƠNG Lost Docks", Position = Vector3.new(1229.8, -84.3, -4360.5)},
     {Name = "🌊 RƯƠNG Forgotten Depths", Position = Vector3.new(6.7, -1725, -4956.8)},
