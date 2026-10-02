@@ -1296,6 +1296,7 @@ end
 
 local islandList = {
     {Name = "🐉 Dragon Island", Position = Vector3.new(4.5, 918.5, -2917.4)},
+    {Name = "🏔️ Cave Island", Position = Vector3.new(-3198.9, 9.9, -2840.6)},
     {Name = "🐝 Forgotten Farms", Position = Vector3.new(101.6, 14.1, -1152.2)},
     {Name = "🏔️ Mountain Heights", Position = Vector3.new(-1611.9, 5.8, -5013.9)},
     {Name = "🧸 Plushie Island", Position = Vector3.new(2300.6, 15.5, -249.7)},
@@ -1551,6 +1552,144 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 end)
 
 -- ==========================================
+-- AUTO FARM TNT (1 TOGGLE - GIỮ E 5S CỐ ĐỊNH)
+-- ==========================================
+AddSection(FarmTab, "AUTO FARM TNT")
+
+-- DANH SÁCH TỌA ĐỘ TNT
+local tntList = {
+    {Name = "TNT 1", Position = Vector3.new(-3864.7, -246.8, -2813.4)},
+    {Name = "TNT 2", Position = Vector3.new(-4176.6, -350.2, -2370.4)},
+    {Name = "TNT 3", Position = Vector3.new(-4389.6, -402.5, -1976.4)},
+    {Name = "TNT 4", Position = Vector3.new(-4669.8, -578.1, -1426.3)},
+    {Name = "TNT 5", Position = Vector3.new(-3623.6, -152.6, -2797.7)},
+    {Name = "Kích Hoạt", Position = Vector3.new(-4344.2, -414.2, -1980.6)},
+    {Name = "Đã Xong", Position = Vector3.new(-4390.7, -395.9, -1824)},
+}
+
+local autoTntEnabled = false
+
+-- Hàm giữ phím E 5 giây
+local function holdEKey()
+    task.spawn(function()
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            task.wait(5)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        end)
+    end)
+end
+
+-- Hàm tele đến 1 TNT và giữ E 5s
+local function processTnt(tntData)
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    root.CFrame = CFrame.new(tntData.Position + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    task.wait(0.3)
+    root.CFrame = CFrame.new(tntData.Position + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    task.wait(0.2)
+    
+    holdEKey()
+    task.wait(5.3)
+    
+    return true
+end
+
+-- Vòng lặp auto TNT
+local function autoTntLoop()
+    while autoTntEnabled do
+        for i, tntData in ipairs(tntList) do
+            if not autoTntEnabled then break end
+            showNotification("💣 TNT " .. i .. "/" .. #tntList)
+            processTnt(tntData)
+        end
+    end
+end
+
+-- 1 TOGGLE DUY NHẤT
+AddToggle(FarmTab, "💣 Auto Farm TNT (5 quả)", function(state)
+    autoTntEnabled = state
+    if state then
+        showNotification("✅ Đã bật Auto Farm TNT!")
+        task.spawn(autoTntLoop)
+    else
+        showNotification("❌ Đã tắt Auto Farm TNT!")
+    end
+end)
+
+-- ==========================================
+-- AUTO FARM BÌNH XĂNG (1 TOGGLE - GIỮ E 3S)
+-- ==========================================
+AddSection(FarmTab, "AUTO FARM BÌNH XĂNG")
+
+-- DANH SÁCH TỌA ĐỘ BÌNH XĂNG
+local fuelList = {
+    {Name = "Bình Xăng 1", Position = Vector3.new(-2388.2, 113.5, -1706.8)},
+    {Name = "Bình Xăng 2", Position = Vector3.new(-2394.7, -41.7, -1724.1)},
+    {Name = "Bình Xăng 3", Position = Vector3.new(-2400.1, -165.5, -1719.6)},
+    {Name = "Bình Xăng 4", Position = Vector3.new(-2346.5, 6.8, -1667.2)},
+    {Name = "Bình Xăng 5", Position = Vector3.new(-2411.5, -61.4, -1642.2)},
+}
+
+local autoFuelEnabled = false
+
+-- Hàm giữ phím E 3 giây
+local function holdEFuel()
+    task.spawn(function()
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            task.wait(3)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        end)
+    end)
+end
+
+-- Hàm tele đến 1 bình xăng và giữ E 3s
+local function processFuel(fuelData)
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    root.CFrame = CFrame.new(fuelData.Position + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    task.wait(0.3)
+    root.CFrame = CFrame.new(fuelData.Position + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    task.wait(0.2)
+    
+    holdEFuel()
+    task.wait(3.3)
+    
+    return true
+end
+
+-- Vòng lặp auto bình xăng
+local function autoFuelLoop()
+    while autoFuelEnabled do
+        for i, fuelData in ipairs(fuelList) do
+            if not autoFuelEnabled then break end
+            showNotification("⛽ Bình Xăng " .. i .. "/" .. #fuelList)
+            processFuel(fuelData)
+        end
+    end
+end
+
+-- 1 TOGGLE DUY NHẤT
+AddToggle(FarmTab, "⛽ Auto Farm Bình Xăng (5 cái)", function(state)
+    autoFuelEnabled = state
+    if state then
+        showNotification("✅ Đã bật Auto Farm Bình Xăng!")
+        task.spawn(autoFuelLoop)
+    else
+        showNotification("❌ Đã tắt Auto Farm Bình Xăng!")
+    end
+end)
+
+-- ==========================================
 -- TAB 5: 🏴‍☠️ TELEPORT RƯƠNG
 -- ==========================================
 local ChestTab = CreateTab("Rương", "🏴‍☠️")
@@ -1559,9 +1698,10 @@ AddSection(ChestTab, "RƯƠNG ĐẢO")
 
 local chestList = {
     {Name = "🐉 RƯƠNG Dragon Island", Position = Vector3.new(201.8, 934.8, -2999.8)},
+    {Name = "🏔️ RƯƠNG Cave Island", Position = Vector3.new(-4390.7, -395.9, -1824)},
     {Name = "🐝 RƯƠNG Forgotten Frams", Position = Vector3.new(102.5, -29.6, -962.3)},
     {Name = "🧸 RƯƠNG Plushie Island", Position = Vector3.new(2251, -92.7, -275.3)},
-    {Name = "⚓ RƯƠNG Lost Docks", Position = Vector3.new(1229.8, -84.3, -4360.5)},
+    {Name = "⚓ RƯƠNG Lost Docks", Position = Vector3.new(1298.7, -79.3, -4380.8)},
     {Name = "🌊 RƯƠNG Forgotten Depths", Position = Vector3.new(6.7, -1725, -4956.8)},
     {Name = "🦁 RƯƠNG Safari Island", Position = Vector3.new(-2533.9, 22, -2879.2)},
     {Name = "🌋 RƯƠNG Volcano Island", Position = Vector3.new(-2391.6, -247.7, -1686.5)},
