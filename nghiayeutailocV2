@@ -1,0 +1,1751 @@
+-- ==========================================
+-- SCRIPT [⚓] NGHIA SENPAI HUB - BLOX FRUIT STYLE
+-- HỖ TRỢ MOBILE + PC
+-- GIAO DIỆN ĐẸP NHƯ SCRIPT TRẢ PHÍ
+-- ĐÃ THÊM: TELE MERCHANT TRONG TAB FARM
+-- ==========================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local isPC = not isMobile
+
+-- Hook __newindex - chặn game ghi đè hàm Kick
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldNewIndex = mt.__newindex
+        mt.__newindex = newcclosure(function(self, key, value)
+            if self == LocalPlayer and key == "Kick" then
+                showNotice("🛡️ ĐÃ CHẶN GHI ĐÈ", "Game cố ghi đè hàm Kick", Color3.fromRGB(200, 150, 30))
+                return nil
+            end
+            return oldNewIndex(self, key, value)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] Đã hook __newindex")
+    end)
+end
+
+-- ==========================================
+-- ANTI-KICK FULL (Chặn kick mọi ngả)
+-- Nối vào script, không cần menu
+-- ==========================================
+local StarterGui = game:GetService("StarterGui")
+local VirtualUser = game:GetService("VirtualUser")
+
+-- ==========================================
+-- 1. THÔNG BÁO
+-- ==========================================
+local function showNotice(title, text, color)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = 5
+        })
+    end)
+    
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+    local sg = pg:FindFirstChild("AntiKickUI")
+    if not sg then
+        sg = Instance.new("ScreenGui")
+        sg.Name = "AntiKickUI"
+        sg.ResetOnSpawn = false
+        sg.Parent = pg
+    end
+    
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 350, 0, 65)
+    frame.Position = UDim2.new(1, -370, 0, 20)
+    frame.BackgroundColor3 = color or Color3.fromRGB(30, 150, 50)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(150, 255, 180)
+    stroke.Thickness = 3
+    
+    local t = Instance.new("TextLabel", frame)
+    t.Size = UDim2.new(1, -20, 0, 25)
+    t.Position = UDim2.new(0, 10, 0, 5)
+    t.BackgroundTransparency = 1
+    t.Text = title
+    t.TextColor3 = Color3.fromRGB(255, 255, 255)
+    t.Font = Enum.Font.GothamBlack
+    t.TextSize = 14
+    t.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local d = Instance.new("TextLabel", frame)
+    d.Size = UDim2.new(1, -20, 0, 30)
+    d.Position = UDim2.new(0, 10, 0, 30)
+    d.BackgroundTransparency = 1
+    d.Text = text
+    d.TextColor3 = Color3.fromRGB(220, 255, 220)
+    d.Font = Enum.Font.GothamBold
+    d.TextSize = 11
+    d.TextWrapped = true
+    d.TextXAlignment = Enum.TextXAlignment.Left
+    d.TextYAlignment = Enum.TextYAlignment.Top
+    
+    task.delay(5, function()
+        if frame and frame.Parent then frame:Destroy() end
+    end)
+end
+
+-- ==========================================
+-- 2. HOOK HÀM KICK CỦA LOCALPLAYER
+-- ==========================================
+if hookfunction then
+    pcall(function()
+        local oldKick = hookfunction(LocalPlayer.Kick, function(self, ...)
+            local args = {...}
+            local reason = tostring(args[1] or "Không rõ")
+            showNotice("🛡️ ĐÃ CHẶN KICK", "Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+            return nil
+        end)
+        print("[Anti-Kick] Đã hook hàm Kick")
+    end)
+end
+
+-- ==========================================
+-- 3. HOOK __NAMECALL (bắt kick qua :Kick())
+-- ==========================================
+local mt = getrawmetatable and getrawmetatable(game)
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldNamecall = mt.__namecall
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            
+            if method == "Kick" and self == LocalPlayer then
+                local args = {...}
+                local reason = tostring(args[1] or "Không rõ")
+                showNotice("🛡️ ĐÃ CHẶN KICK", "Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+                return nil
+            end
+            
+            return oldNamecall(self, ...)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] Đã hook __namecall")
+    end)
+end
+
+-- ==========================================
+-- 4. HOOK __INDEX (bắt kick qua biến cục bộ)
+-- ==========================================
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldIndex = mt.__index
+        mt.__index = newcclosure(function(self, key)
+            if self == LocalPlayer and key == "Kick" then
+                return function(...)
+                    local args = {...}
+                    local reason = tostring(args[1] or "Không rõ")
+                    showNotice("🛡️ ĐÃ CHẶN KICK", "Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+                    return nil
+                end
+            end
+            return oldIndex(self, key)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] Đã hook __index")
+    end)
+end
+
+-- ==========================================
+-- 5. CHỐNG KICK AFK
+-- ==========================================
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+print("=================================")
+print("🛡️ ANTI-KICK FULL LOADED")
+print("=================================")
+print("✅ Hook hàm Kick")
+print("✅ Hook __namecall")
+print("✅ Hook __index")
+print("✅ Chống AFK")
+print("=================================")
+
+-- ==========================================
+-- ANTI-KICK THẬT (Chặn kick từ server)
+-- + Thông báo khi phát hiện kick
+-- ==========================================
+local StarterGui = game:GetService("StarterGui")
+
+-- Hàm hiện thông báo
+local function showNotice(text, color)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "🛡️ ANTI-KICK",
+            Text = text,
+            Duration = 5
+        })
+    end)
+    
+    -- Hiện khung trên màn hình
+    local sg = game.Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("AntiKickNotice")
+    if not sg then
+        sg = Instance.new("ScreenGui")
+        sg.Name = "AntiKickNotice"
+        sg.ResetOnSpawn = false
+        sg.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+    
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 350, 0, 60)
+    frame.Position = UDim2.new(1, -370, 0, 20)
+    frame.BackgroundColor3 = color or Color3.fromRGB(30, 150, 50)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(100, 255, 150)
+    stroke.Thickness = 3
+    
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -20, 0, 30)
+    title.Position = UDim2.new(0, 10, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "🛡️ ANTI-KICK"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local textLabel = Instance.new("TextLabel", frame)
+    textLabel.Size = UDim2.new(1, -20, 0, 25)
+    textLabel.Position = UDim2.new(0, 10, 0, 32)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(220, 255, 220)
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 11
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    task.delay(5, function()
+        if frame and frame.Parent then frame:Destroy() end
+    end)
+end
+
+-- ==========================================
+-- CHẶN KICK TỪ SERVER
+-- ==========================================
+local mt = getrawmetatable and getrawmetatable(game)
+if mt and setreadonly and hookfunction then
+    setreadonly(mt, false)
+    local oldNamecall = mt.__namecall
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        
+        if method == "Kick" and self == LocalPlayer then
+            local args = {...}
+            local reason = tostring(args[1] or "Không rõ")
+            
+            -- Hiện thông báo
+            showNotice("Đã chặn kick! Lý do: " .. reason, Color3.fromRGB(30, 150, 50))
+            
+            -- CHẶN KICK - không cho kick
+            return nil
+        end
+        
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+    print("[Anti-Kick] Đã hook - chặn kick từ server")
+else
+    -- Fallback nếu executor không hỗ trợ
+    print("[Anti-Kick] Executor không hỗ trợ hook - dùng cách khác")
+end
+
+-- ==========================================
+-- CHỐNG KICK AFK
+-- ==========================================
+local VirtualUser = game:GetService("VirtualUser")
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+print("[Anti-Kick] Đã bật toàn bộ")
+
+-- ==========================================
+-- ANTI-AFK KICK (Chống bị kick khi treo máy)
+-- Nối vào script, không cần menu
+-- ==========================================
+local VirtualUser = game:GetService("VirtualUser")
+
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+-- ==========================================
+-- ANTI-FLING (Chống bị văng + giữ ổn định)
+-- ==========================================
+local flingConnection = nil
+
+local function enableAntiFling()
+    if flingConnection then flingConnection:Disconnect() end
+    
+    flingConnection = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not root or not hum then return end
+            
+            -- 1. Chống bị văng xa (fling detection)
+            local velocity = root.AssemblyLinearVelocity
+            if velocity.Magnitude > 500 then
+                root.AssemblyLinearVelocity = velocity.Unit * 500
+                root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+            
+            -- 2. Giữ nhân vật không bị ngã
+            if hum:GetState() == Enum.HumanoidStateType.FallingDown 
+                or hum:GetState() == Enum.HumanoidStateType.Ragdoll then
+                hum:ChangeState(Enum.HumanoidStateType.Running)
+            end
+            
+            -- 3. Chống bị physics đẩy lung tung
+            if root.RotVelocity.Magnitude > 50 then
+                root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+        end)
+    end)
+end
+
+enableAntiFling()
+
+-- ==========================================
+-- ANTI-KICK (Chống bị kick AFK + kick thường)
+-- ==========================================
+local VirtualUser = game:GetService("VirtualUser")
+local StarterGui = game:GetService("StarterGui")
+
+-- 1. Chống kick AFK (idle 20 phút)
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+-- 2. Chống kick do bị đẩy khỏi game (khi character load lại)
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    pcall(function()
+        -- Thông báo đã hồi sinh, không bị kick
+        StarterGui:SetCore("SendNotification", {
+            Title = "Anti-Kick",
+            Text = "Đã chống kick thành công!",
+            Duration = 2
+        })
+    end)
+end)
+
+-- 3. Giữ kết nối ổn định (chống timeout)
+task.spawn(function()
+    while task.wait(30) do
+        pcall(function()
+            -- Gửi ping nhẹ để giữ kết nối
+            game:GetService("ReplicatedStorage"):FindFirstChild("")
+        end)
+    end
+end)
+
+-- ==========================================
+-- ANTI-DETECTION
+-- ==========================================
+local function setupAntiDetection()
+    pcall(function()
+        if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
+        if protect_gui then protect_gui(ScreenGui) end
+    end)
+    pcall(function()
+        ScreenGui.Name = "UI_" .. tostring(math.random(1000000, 9999999))
+    end)
+end
+
+local parentContainer = nil
+local successCore = pcall(function() return CoreGui end)
+
+if successCore and CoreGui then
+    parentContainer = CoreGui
+else
+    parentContainer = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+if parentContainer:FindFirstChild("NghiaSenpaiHub") then
+    parentContainer.NghiaSenpaiHub:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "UI_" .. tostring(math.random(1000000, 9999999))
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 2147483647
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = parentContainer
+
+setupAntiDetection()
+
+-- ==========================================
+-- LOADING SCREEN (BLOX FRUIT STYLE)
+-- ==========================================
+local LoadingOverlay = Instance.new("Frame", ScreenGui)
+LoadingOverlay.Size = UDim2.new(1, 0, 1, 0)
+LoadingOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+LoadingOverlay.BackgroundTransparency = 0.3
+LoadingOverlay.ZIndex = 9999
+
+local LoadingFrame = Instance.new("Frame", LoadingOverlay)
+LoadingFrame.Size = UDim2.new(0, 400, 0, 200)
+LoadingFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+LoadingFrame.ZIndex = 10000
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 15)
+local loadStroke = Instance.new("UIStroke", LoadingFrame)
+loadStroke.Color = Color3.fromRGB(138, 43, 226)
+loadStroke.Thickness = 3
+
+local loadTitle = Instance.new("TextLabel", LoadingFrame)
+loadTitle.Size = UDim2.new(1, 0, 0, 40)
+loadTitle.Position = UDim2.new(0, 0, 0, 25)
+loadTitle.BackgroundTransparency = 1
+loadTitle.Text = "⚓ NGHIA SENPAI HUB ⚓"
+loadTitle.TextColor3 = Color3.fromRGB(138, 43, 226)
+loadTitle.Font = Enum.Font.GothamBlack
+loadTitle.TextSize = 24
+
+local loadSubtitle = Instance.new("TextLabel", LoadingFrame)
+loadSubtitle.Size = UDim2.new(1, 0, 0, 20)
+loadSubtitle.Position = UDim2.new(0, 0, 0, 65)
+loadSubtitle.BackgroundTransparency = 1
+loadSubtitle.Text = "PREMIUM EDITION"
+loadSubtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+loadSubtitle.Font = Enum.Font.GothamBold
+loadSubtitle.TextSize = 12
+
+local percentLabel = Instance.new("TextLabel", LoadingFrame)
+percentLabel.Size = UDim2.new(1, 0, 0, 30)
+percentLabel.Position = UDim2.new(0, 0, 0, 90)
+percentLabel.BackgroundTransparency = 1
+percentLabel.Text = "0%"
+percentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+percentLabel.Font = Enum.Font.GothamBlack
+percentLabel.TextSize = 20
+
+local progressBg = Instance.new("Frame", LoadingFrame)
+progressBg.Size = UDim2.new(0.8, 0, 0, 12)
+progressBg.Position = UDim2.new(0.1, 0, 0, 130)
+progressBg.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+Instance.new("UICorner", progressBg).CornerRadius = UDim.new(1, 0)
+
+local progressFill = Instance.new("Frame", progressBg)
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+local progressGradient = Instance.new("UIGradient", progressFill)
+progressGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(75, 0, 130))
+})
+
+local statusLabel = Instance.new("TextLabel", LoadingFrame)
+statusLabel.Size = UDim2.new(1, 0, 0, 20)
+statusLabel.Position = UDim2.new(0, 0, 0, 155)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Đang tải..."
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 11
+
+-- ==========================================
+-- MAIN MENU (BLOX FRUIT STYLE)
+-- ==========================================
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.ZIndex = 10
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(138, 43, 226)
+MainStroke.Thickness = 2
+
+-- ==========================================
+-- TITLE BAR (TÊN HUB Ở GIỮA)
+-- ==========================================
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1, 0, 0, 45)
+TitleBar.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
+
+local TitleGradient = Instance.new("UIGradient", TitleBar)
+TitleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(75, 0, 130))
+})
+
+local TitleText = Instance.new("TextLabel", TitleBar)
+TitleText.Size = UDim2.new(1, -100, 1, 0)
+TitleText.Position = UDim2.new(0, 50, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "⚓ NGHIA SENPAI HUB ⚓"
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.Font = Enum.Font.GothamBlack
+TitleText.TextSize = 15
+TitleText.TextXAlignment = Enum.TextXAlignment.Center
+
+local CloseBtn = Instance.new("TextButton", TitleBar)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -40, 0, 7)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+
+CloseBtn.MouseButton1Click:Connect(function() 
+    MainFrame.Visible = false 
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe then
+        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+            MainFrame.Visible = not MainFrame.Visible
+        end
+    end
+end)
+
+-- ==========================================
+-- TAB BAR (BLOX FRUIT STYLE)
+-- ==========================================
+local TabBar = Instance.new("Frame", MainFrame)
+TabBar.Size = UDim2.new(0, 140, 1, -55)
+TabBar.Position = UDim2.new(0, 10, 0, 50)
+TabBar.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 10)
+
+local TabList = Instance.new("UIListLayout", TabBar)
+TabList.SortOrder = Enum.SortOrder.LayoutOrder
+TabList.Padding = UDim.new(0, 5)
+TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local TabContent = Instance.new("Frame", MainFrame)
+TabContent.Size = UDim2.new(1, -165, 1, -55)
+TabContent.Position = UDim2.new(0, 155, 0, 50)
+TabContent.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+Instance.new("UICorner", TabContent).CornerRadius = UDim.new(0, 10)
+
+-- ==========================================
+-- TAB SYSTEM
+-- ==========================================
+local currentTab = nil
+local tabs = {}
+
+local function CreateTab(name, icon)
+    local tabBtn = Instance.new("TextButton", TabBar)
+    tabBtn.Size = UDim2.new(1, -10, 0, 40)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    tabBtn.Text = icon .. " " .. name
+    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabBtn.Font = Enum.Font.GothamBold
+    tabBtn.TextSize = 11
+    tabBtn.AutoButtonColor = false
+    Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 8)
+    
+    local scroll = Instance.new("ScrollingFrame", TabContent)
+    scroll.Size = UDim2.new(1, -10, 1, -10)
+    scroll.Position = UDim2.new(0, 5, 0, 5)
+    scroll.BackgroundTransparency = 1
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Color3.fromRGB(138, 43, 226)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.ScrollingDirection = Enum.ScrollingDirection.Y
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.Visible = false
+    
+    local scrollLayout = Instance.new("UIListLayout", scroll)
+    scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    scrollLayout.Padding = UDim.new(0, 6)
+    
+    local tabData = {
+        Button = tabBtn,
+        Scroll = scroll,
+        Name = name
+    }
+    
+    table.insert(tabs, tabData)
+    
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, tab in ipairs(tabs) do
+            tab.Button.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            tab.Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+            tab.Scroll.Visible = false
+        end
+        
+        tabBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        scroll.Visible = true
+        
+        currentTab = tabData
+    end)
+    
+    return scroll
+end
+
+-- ==========================================
+-- UI COMPONENTS (BLOX FRUIT STYLE)
+-- ==========================================
+local function AddSection(parent, title)
+    local section = Instance.new("TextLabel", parent)
+    section.Size = UDim2.new(1, 0, 0, 25)
+    section.BackgroundTransparency = 1
+    section.Text = "━━━━━━ " .. title .. " ━━━━━━"
+    section.TextColor3 = Color3.fromRGB(138, 43, 226)
+    section.Font = Enum.Font.GothamBold
+    section.TextSize = 11
+    return section
+end
+
+local function AddToggle(parent, name, callback)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(1, 0, 0, 40)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local toggleBg = Instance.new("Frame", frame)
+    toggleBg.Size = UDim2.new(0, 50, 0, 24)
+    toggleBg.Position = UDim2.new(1, -62, 0.5, -12)
+    toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+    Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
+    
+    local toggleCircle = Instance.new("Frame", toggleBg)
+    toggleCircle.Size = UDim2.new(0, 18, 0, 18)
+    toggleCircle.Position = UDim2.new(0, 3, 0.5, -9)
+    toggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", toggleCircle).CornerRadius = UDim.new(1, 0)
+    
+    local toggleBtn = Instance.new("TextButton", frame)
+    toggleBtn.Size = UDim2.new(1, 0, 1, 0)
+    toggleBtn.BackgroundTransparency = 1
+    toggleBtn.Text = ""
+    
+    local enabled = false
+    local function updateState(newState)
+        enabled = newState
+        
+        if enabled then
+            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(138, 43, 226)}):Play()
+            TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 29, 0.5, -9)}):Play()
+        else
+            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+            TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -9)}):Play()
+        end
+        
+        task.spawn(function() pcall(callback, enabled) end)
+    end
+    
+    toggleBtn.MouseButton1Click:Connect(function() updateState(not enabled) end)
+    toggleBtn.TouchTap:Connect(function() updateState(not enabled) end)
+    
+    return { SetState = updateState, GetState = function() return enabled end }
+end
+
+local function AddButton(parent, name, color, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = color or Color3.fromRGB(40, 40, 55)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(
+            math.min(btn.BackgroundColor3.R * 1.3, 255),
+            math.min(btn.BackgroundColor3.G * 1.3, 255),
+            math.min(btn.BackgroundColor3.B * 1.3, 255)
+        )}):Play()
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = color or Color3.fromRGB(40, 40, 55)}):Play()
+    end)
+    
+    btn.MouseButton1Click:Connect(function()
+        task.spawn(function() pcall(callback) end)
+    end)
+    btn.TouchTap:Connect(function()
+        task.spawn(function() pcall(callback) end)
+    end)
+    
+    return btn
+end
+
+local function AddInput(parent, labelText, defaultVal, callback)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(1, 0, 0, 38)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.55, 0, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local box = Instance.new("TextBox", frame)
+    box.Size = UDim2.new(0.35, -12, 0.7, 0)
+    box.Position = UDim2.new(0.6, 0, 0.15, 0)
+    box.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+    box.Text = tostring(defaultVal)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.GothamBold
+    box.TextSize = 12
+    box.PlaceholderText = "..."
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+    
+    box.FocusLost:Connect(function()
+        local val = tonumber(box.Text)
+        if val then 
+            task.spawn(function() pcall(callback, val) end)
+        end
+    end)
+    
+    return box
+end
+
+-- ==========================================
+-- NOTIFICATION
+-- ==========================================
+local function showNotification(message, duration)
+    duration = duration or 3
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 300, 0, 60)
+    notification.Position = UDim2.new(0.5, -150, 0, -70)
+    notification.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    notification.ZIndex = 999
+    notification.Parent = ScreenGui
+    Instance.new("UICorner", notification).CornerRadius = UDim.new(0, 10)
+    
+    local notifStroke = Instance.new("UIStroke", notification)
+    notifStroke.Color = Color3.fromRGB(138, 43, 226)
+    notifStroke.Thickness = 2
+    
+    local notifText = Instance.new("TextLabel", notification)
+    notifText.Size = UDim2.new(1, -20, 1, 0)
+    notifText.Position = UDim2.new(0, 10, 0, 0)
+    notifText.BackgroundTransparency = 1
+    notifText.Text = message
+    notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    notifText.Font = Enum.Font.GothamBold
+    notifText.TextSize = 12
+    notifText.TextWrapped = true
+    
+    TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -150, 0, 20)
+    }):Play()
+    
+    task.delay(duration, function()
+        TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(0.5, -150, 0, -70)
+        }):Play()
+        task.wait(0.3)
+        notification:Destroy()
+    end)
+end
+
+-- ==========================================
+-- BIẾN TOÀN CỤC
+-- ==========================================
+local BYPASS_TP = false
+local isFlyingToIsland = false
+local savedPosition = nil
+local speedEnabled = false
+local speedMaintainConnection = nil
+local DEFAULT_SPEED_RESET = 40
+local espPlayersEnabled2 = false
+
+local noclipEnabled = false
+local noclipConnection = nil
+local jumpEnabled = false
+
+local config = {
+    walkSpeed = 100,
+    jumpPower = 250,
+    islandFlySpeed = 700,
+    islandFlyHeight = 150,
+    flyToSavedSpeed = 500,
+    autoClickInterval = 0.05,
+    scriptPower = 1,
+}
+
+-- ==========================================
+-- HÀM XUYÊN TƯỜNG (CHỈ XUYÊN TƯỜNG, KHÔNG XUYÊN ĐẤT)
+-- ==========================================
+local function enableNoclip()
+    if noclipConnection then noclipConnection:Disconnect() end
+    noclipConnection = RunService.Stepped:Connect(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function disableNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+-- ==========================================
+-- LOADING ANIMATION
+-- ==========================================
+task.spawn(function()
+    local duration = 5
+    local startTime = os.clock()
+    
+    while true do
+        local elapsed = os.clock() - startTime
+        local percent = math.clamp(elapsed / duration * 100, 0, 100)
+        
+        percentLabel.Text = math.floor(percent) .. "%"
+        progressFill.Size = UDim2.new(percent / 100, 0, 1, 0)
+        
+        if percent < 20 then
+            statusLabel.Text = "Đang tải hệ thống..."
+        elseif percent < 40 then
+            statusLabel.Text = "Đang tải chức năng..."
+        elseif percent < 60 then
+            statusLabel.Text = "Đang kết nối server..."
+        elseif percent < 80 then
+            statusLabel.Text = "Đang khởi tạo menu..."
+        elseif percent < 100 then
+            statusLabel.Text = "Hoàn tất..."
+        end
+        
+        if percent >= 100 then break end
+        task.wait(0.05)
+    end
+    
+    percentLabel.Text = "100%"
+    statusLabel.Text = "✅ KÍCH HOẠT THÀNH CÔNG!"
+    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+    progressFill.Size = UDim2.new(1, 0, 1, 0)
+    
+    task.wait(0.5)
+    LoadingOverlay:Destroy()
+    MainFrame.Visible = true
+    
+    if #tabs > 0 then
+        tabs[1].Button.MouseButton1Click:Fire()
+    end
+end)
+
+-- ==========================================
+-- TAB 1: 🏠 MAIN
+-- ==========================================
+local MainTab = CreateTab("Main", "🏠")
+
+AddSection(MainTab, "BYPASS TP")
+local bypassToggle = AddToggle(MainTab, "🚀 Bypass TP", function(state)
+    BYPASS_TP = state
+    showNotification(state and "⚡ Đã bật Bypass TP!" or "❌ Đã tắt Bypass TP")
+end)
+
+AddSection(MainTab, "CHỨC NĂNG CƠ BẢN")
+
+AddToggle(MainTab, "🚪 Xuyên Tường", function(state)
+    noclipEnabled = state
+    showNotification(state and "✅ Đã bật Xuyên Tường!" or "❌ Đã tắt Xuyên Tường!")
+    
+    if state then
+        enableNoclip()
+    else
+        disableNoclip()
+    end
+end)
+
+AddButton(MainTab, "🏠 Teleport Về Home", Color3.fromRGB(0, 150, 200), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = CFrame.new(Vector3.new(3.9, 16.9, -2894))
+        showNotification("✅ Đã teleport về Home!")
+    end
+end)
+
+local speedToggle = AddToggle(MainTab, "🏃 Chạy Nhanh", function(state)
+    speedEnabled = state
+    showNotification(state and "✅ Đã bật Chạy Nhanh!" or "❌ Đã tắt Chạy Nhanh!")
+    
+    if speedMaintainConnection then 
+        speedMaintainConnection:Disconnect() 
+        speedMaintainConnection = nil 
+    end
+    
+    if state then
+        speedMaintainConnection = RunService.Heartbeat:Connect(function()
+            pcall(function()
+                local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local targetSpeed = config.walkSpeed
+                    local currentSpeed = hum.WalkSpeed
+                    
+                    if math.abs(currentSpeed - targetSpeed) > 1 then
+                        hum.WalkSpeed = currentSpeed + (targetSpeed - currentSpeed) * 0.2
+                    else
+                        hum.WalkSpeed = targetSpeed
+                    end
+                end
+            end)
+        end)
+    else
+        local resetConn
+        resetConn = RunService.Heartbeat:Connect(function()
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                if hum.WalkSpeed > DEFAULT_SPEED_RESET + 1 then
+                    hum.WalkSpeed = hum.WalkSpeed - 3
+                elseif hum.WalkSpeed < DEFAULT_SPEED_RESET - 1 then
+                    hum.WalkSpeed = hum.WalkSpeed + 3
+                else
+                    hum.WalkSpeed = DEFAULT_SPEED_RESET
+                    if resetConn then resetConn:Disconnect() end
+                end
+            end
+        end)
+    end
+end)
+
+AddInput(MainTab, "Tốc Độ Chạy", config.walkSpeed, function(v)
+    config.walkSpeed = v
+    if speedEnabled then
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = v end
+    end
+    showNotification("✅ Tốc độ chạy: " .. v)
+end)
+
+AddToggle(MainTab, "🦘 Nhảy Cao", function(state)
+    jumpEnabled = state
+    showNotification(state and "✅ Đã bật Nhảy Cao!" or "❌ Đã tắt Nhảy Cao!")
+end)
+
+AddInput(MainTab, "Lực Nhảy", config.jumpPower, function(v)
+    config.jumpPower = v
+    showNotification("✅ Lực nhảy: " .. v)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if jumpEnabled then
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            local currentVel = root.AssemblyLinearVelocity
+            root.AssemblyLinearVelocity = Vector3.new(currentVel.X, config.jumpPower, currentVel.Z)
+        end
+    end
+end)
+
+-- ==========================================
+-- TAB 2: 👁️ ESP
+-- ==========================================
+local EspTab = CreateTab("ESP", "👁️")
+
+AddSection(EspTab, "ĐỊNH VỊ")
+
+AddToggle(EspTab, "👤 Định Vị Người Chơi", function(state)
+    espPlayersEnabled2 = state
+    showNotification(state and "✅ Đã bật Định Vị Người Chơi!" or "❌ Đã tắt!")
+    
+    if state then
+        task.spawn(function()
+            while espPlayersEnabled2 do
+                pcall(function()
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer then
+                            local char = player.Character
+                            if char then
+                                local head = char:FindFirstChild("Head")
+                                if head and not head:FindFirstChild("PlayerESP") then
+                                    local highlight = Instance.new("Highlight")
+                                    highlight.Name = "PlayerESP_Highlight"
+                                    highlight.FillColor = Color3.fromRGB(255, 100, 100)
+                                    highlight.FillTransparency = 0.7
+                                    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                                    highlight.OutlineTransparency = 0
+                                    highlight.Parent = char
+                                    
+                                    local billboard = Instance.new("BillboardGui")
+                                    billboard.Name = "PlayerESP"
+                                    billboard.Size = UDim2.new(0, 200, 0, 35)
+                                    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                                    billboard.AlwaysOnTop = true
+                                    billboard.Parent = head
+                                    
+                                    local nameLabel = Instance.new("TextLabel", billboard)
+                                    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+                                    nameLabel.BackgroundTransparency = 1
+                                    nameLabel.Text = "👤 " .. player.Name
+                                    nameLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                                    nameLabel.Font = Enum.Font.GothamBlack
+                                    nameLabel.TextSize = 14
+                                    nameLabel.TextStrokeTransparency = 0
+                                    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                                end
+                            end
+                        end
+                    end
+                end)
+                task.wait(3)
+            end
+        end)
+    else
+        for _, player in ipairs(Players:GetPlayers()) do
+            pcall(function()
+                local char = player.Character
+                if char then
+                    local hl = char:FindFirstChild("PlayerESP_Highlight")
+                    if hl then hl:Destroy() end
+                    local head = char:FindFirstChild("Head")
+                    if head then
+                        local bb = head:FindFirstChild("PlayerESP")
+                        if bb then bb:Destroy() end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+AddButton(EspTab, "🗑️ Xóa ESP Người Chơi", Color3.fromRGB(200, 50, 50), function()
+    espPlayersEnabled2 = false
+    for _, player in ipairs(Players:GetPlayers()) do
+        pcall(function()
+            local char = player.Character
+            if char then
+                local hl = char:FindFirstChild("PlayerESP_Highlight")
+                if hl then hl:Destroy() end
+                local head = char:FindFirstChild("Head")
+                if head then
+                    local bb = head:FindFirstChild("PlayerESP")
+                    if bb then bb:Destroy() end
+                end
+            end
+        end)
+    end
+    showNotification("✅ Đã xóa ESP!")
+end)
+
+-- ==========================================
+-- TAB 3: 🏝️ TELEPORT
+-- ==========================================
+local TpTab = CreateTab("Teleport", "🏝️")
+
+AddSection(TpTab, "ĐẢO")
+AddInput(TpTab, "Tốc Độ Bay", config.islandFlySpeed, function(v)
+    config.islandFlySpeed = v
+    showNotification("✅ Tốc độ bay: " .. v)
+end)
+
+AddInput(TpTab, "Độ Cao Bay", config.islandFlyHeight, function(v)
+    config.islandFlyHeight = v
+    showNotification("✅ Độ cao: " .. v)
+end)
+
+local function stopFlying()
+    isFlyingToIsland = false
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    end
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+    end
+end
+
+local function bypassTeleport(targetPos, name)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    task.wait(0.05)
+    
+    showNotification("⚡ Bypass TP đến " .. name .. "...")
+    
+    local oldCFrame = root.CFrame
+    local finalPos = Vector3.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+    
+    root.CFrame = CFrame.new(root.Position + Vector3.new(0, 500, 0))
+    task.wait(0.1)
+    
+    root.CFrame = CFrame.new(finalPos)
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    task.wait(0.15)
+    
+    local distanceMoved = (root.Position - oldCFrame.Position).Magnitude
+    local expectedDistance = (oldCFrame.Position - finalPos).Magnitude
+    
+    if expectedDistance > 50 and distanceMoved < expectedDistance * 0.5 then
+        task.wait(0.1)
+        root.CFrame = CFrame.new(finalPos + Vector3.new(0, 2, 0))
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        task.wait(0.15)
+    end
+    
+    task.wait(0.2)
+    
+    local finalDistance = (root.Position - finalPos).Magnitude
+    if finalDistance < 20 then
+        showNotification("✅ Đã đến " .. name .. "!")
+    else
+        root.CFrame = CFrame.new(finalPos)
+        task.wait(0.1)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        showNotification("⚠️thử lại " .. name)
+    end
+end
+
+local function smoothFlyToPosition(targetPos, name)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not root or not hum then return end
+    
+    stopFlying()
+    task.wait(0.1)
+    
+    isFlyingToIsland = true
+    hum.PlatformStand = true
+    
+    showNotification("🕊️ Đang bay đến " .. name .. "...")
+    
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.P = 1250
+    bodyVelocity.Parent = root
+    
+    local bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+    bodyGyro.D = 500
+    bodyGyro.P = 100000
+    bodyGyro.CFrame = root.CFrame
+    bodyGyro.Parent = root
+    
+    local startPos = root.Position
+    local flyHeight = math.max(startPos.Y, targetPos.Y) + config.islandFlyHeight
+    
+    local phase = "UP"
+    local flySpeed = config.islandFlySpeed
+    
+    local flyConn
+    flyConn = RunService.RenderStepped:Connect(function(dt)
+        if not isFlyingToIsland then
+            if flyConn then flyConn:Disconnect() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if bodyGyro then bodyGyro:Destroy() end
+            return
+        end
+        
+        pcall(function()
+            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not currentRoot then return end
+            
+            local currentPos = currentRoot.Position
+            local cam = workspace.CurrentCamera
+            
+            bodyGyro.CFrame = CFrame.new(currentPos, currentPos + cam.CFrame.LookVector)
+            
+            if phase == "UP" then
+                local heightDiff = flyHeight - currentPos.Y
+                if heightDiff > 5 then
+                    bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+                else
+                    phase = "HORIZONTAL"
+                end
+            elseif phase == "HORIZONTAL" then
+                local horizontalTarget = Vector3.new(targetPos.X, flyHeight, targetPos.Z)
+                local horizontalDiff = horizontalTarget - currentPos
+                local horizontalDist = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Magnitude
+                
+                if horizontalDist > 10 then
+                    local direction = Vector3.new(horizontalDiff.X, 0, horizontalDiff.Z).Unit
+                    bodyVelocity.Velocity = direction * flySpeed
+                    
+                    local yDiff = flyHeight - currentPos.Y
+                    bodyVelocity.Velocity = bodyVelocity.Velocity + Vector3.new(0, yDiff * 3, 0)
+                else
+                    phase = "DOWN"
+                end
+            elseif phase == "DOWN" then
+                local targetY = targetPos.Y + 5
+                local yDiff = targetY - currentPos.Y
+                
+                if yDiff < -5 then
+                    bodyVelocity.Velocity = Vector3.new(0, -flySpeed * 0.6, 0)
+                else
+                    isFlyingToIsland = false
+                    
+                    if flyConn then flyConn:Disconnect() end
+                    if bodyVelocity then bodyVelocity:Destroy() end
+                    if bodyGyro then bodyGyro:Destroy() end
+                    
+                    hum.PlatformStand = false
+                    currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+                    currentRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    
+                    showNotification("✅ Đã đến " .. name .. "!")
+                end
+            end
+        end)
+    end)
+    
+    task.delay(20, function()
+        if isFlyingToIsland then
+            stopFlying()
+            if flyConn then flyConn:Disconnect() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if bodyGyro then bodyGyro:Destroy() end
+            
+            local currentRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentRoot then
+                currentRoot.CFrame = CFrame.new(targetPos.X, targetPos.Y + 5, targetPos.Z)
+            end
+            showNotification("⚠️timeout!")
+        end
+    end)
+end
+
+local function flyToPosition(targetPos, name)
+    if BYPASS_TP then
+        bypassTeleport(targetPos, name)
+    else
+        smoothFlyToPosition(targetPos, name)
+    end
+end
+
+local islandList = {
+    {Name = "🐉 Dragon Island", Position = Vector3.new(4.5, 918.5, -2917.4)},
+    {Name = "🐝 Forgotten Farms", Position = Vector3.new(101.6, 14.1, -1152.2)},
+    {Name = "🏔️ Mountain Heights", Position = Vector3.new(-1611.9, 5.8, -5013.9)},
+    {Name = "🧸 Plushie Island", Position = Vector3.new(2300.6, 15.5, -249.7)},
+    {Name = "☁️ Cloud Island", Position = Vector3.new(-9667.8, 5328, -1339.2)},
+    {Name = "🌅 Sunken Island", Position = Vector3.new(2071.2, 11, -2628.4)},
+    {Name = "⚓ Lost Docks", Position = Vector3.new(1411.7, 16.3, -4400)},
+    {Name = "🌊 Forgotten Depths", Position = Vector3.new(12.7, 6.4, -4945.5)},
+    {Name = "🦁 Safari Island", Position = Vector3.new(-2243.8, 9.9, -2838.8)},
+    {Name = "🌋 Volcano Island", Position = Vector3.new(-2283.2, 7.3, -1883.3)},
+    {Name = "🦕 Dino Island", Position = Vector3.new(-1717.4, 964.2, -5122.7)},
+    {Name = "⏳ Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
+   {Name = "🛴Toy Island", Position = Vector3.new(2612.3, 47.3, 427.8)},
+}
+
+for _, island in ipairs(islandList) do
+    AddButton(TpTab, island.Name, Color3.fromRGB(0, 130, 110), function()
+        flyToPosition(island.Position, island.Name)
+    end)
+end
+
+AddButton(TpTab, "🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
+    stopFlying()
+    showNotification("🛑 Đã dừng!")
+end)
+
+AddSection(TpTab, "LƯU VỊ TRÍ")
+AddButton(TpTab, "💾 Lưu Vị Trí Hiện Tại", Color3.fromRGB(0, 130, 180), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        savedPosition = root.CFrame
+        showNotification("✅ Đã lưu vị trí!")
+    end
+end)
+
+AddButton(TpTab, "📍 Teleport Đến Vị Trí Đã Lưu", Color3.fromRGB(0, 180, 90), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root and savedPosition then
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        root.CFrame = savedPosition
+        task.wait(0.05)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        showNotification("✅ Đã teleport!")
+    else
+        showNotification("❌ Chưa lưu vị trí!")
+    end
+end)
+
+AddButton(TpTab, "🕊️ Bay/TP Đến Vị Trí Lưu", Color3.fromRGB(0, 180, 230), function()
+    if not savedPosition then
+        showNotification("❌ Hãy lưu vị trí trước!")
+        return
+    end
+    flyToPosition(savedPosition.Position, "Vị Trí Đã Lưu")
+end)
+
+-- ==========================================
+-- TAB 4: 💰 FARM
+-- ==========================================
+local FarmTab = CreateTab("Farm", "💰")
+
+AddSection(FarmTab, "SELL PETS")
+AddButton(FarmTab, "💰 Mở Sell Pets(khoảng cách)", Color3.fromRGB(230, 180, 0), function()
+    pcall(function()
+        local opened = false
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            pcall(function()
+                if obj:IsA("ProximityPrompt") then
+                    local actionText = (obj.ActionText or ""):lower()
+                    local promptName = obj.Name:lower()
+                    local parentName = obj.Parent and obj.Parent.Name:lower() or ""
+                    if actionText:find("sell") or promptName:find("sell Pets") or parentName:find("sellPet") then
+                        obj.Enabled = true
+                        obj.MaxActivationDistance = 100
+                        obj:InputHoldBegin()
+                        task.wait(0.15)
+                        obj:InputHoldEnd()
+                        opened = true
+                        showNotification("✅ Đã mở Sell Pets!")
+                    end
+                end
+            end)
+        end
+        if not opened then
+            for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
+                pcall(function()
+                    if obj:IsA("RemoteEvent") and obj.Name:lower():find("sell") then
+                        obj:FireServer()
+                        opened = true
+                        showNotification("✅ Đã mở Sell Pets!")
+                    end
+                end)
+            end
+        end
+        if not opened then showNotification("❌ Không tìm thấy Sell Pets!") end
+    end)
+end)
+
+AddSection(FarmTab, "TELEPORT QUẢ")
+AddButton(FarmTab, "🍎 Pepper", Color3.fromRGB(230, 50, 50), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local items = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            local objName = obj.Name:lower()
+            if objName:find("pepper") or objName:find("chili") then
+                if obj:IsA("BasePart") then table.insert(items, obj) end
+            end
+        end)
+    end
+    if #items > 0 then
+        root.CFrame = CFrame.new(items[1].Position + Vector3.new(0, 5, 0))
+        showNotification("✅ Đã teleport đến Pepper")
+    else
+        showNotification("❌ Không tìm thấy Pepper")
+    end
+end)
+
+AddButton(FarmTab, "🥥 Coconut", Color3.fromRGB(130, 60, 15), function()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local items = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            local objName = obj.Name:lower()
+            if objName:find("coconut") or objName:find("coco") then
+                if obj:IsA("BasePart") then table.insert(items, obj) end
+            end
+        end)
+    end
+    if #items > 0 then
+        root.CFrame = CFrame.new(items[1].Position + Vector3.new(0, 5, 0))
+        showNotification("✅ Đã teleport đến Coconut")
+    else
+        showNotification("❌ Không tìm thấy Coconut")
+    end
+end)
+
+-- ==========================================
+-- TELEPORT MERCHANT (THÊM VÀO TAB FARM)
+-- ==========================================
+AddSection(FarmTab, "TELEPORT MERCHANT")
+
+AddButton(FarmTab, "🧭 Tele Đến Merchant", Color3.fromRGB(230, 150, 0), function()
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if not root then
+        showNotification("❌ Nhân vật chưa spawn!")
+        return
+    end
+    
+    showNotification("🔍 Đang tìm Merchant...")
+    
+    local found = nil
+    local foundName = ""
+    
+    -- Quét workspace tìm NPC có tên chứa "merchant"
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        pcall(function()
+            local objName = obj.Name:lower()
+            if objName:find("merchant") then
+                if obj:IsA("Model") or obj:IsA("BasePart") then
+                    found = obj
+                    foundName = obj.Name
+                end
+            end
+            -- Kiểm tra qua Humanoid
+            if obj:IsA("Humanoid") and obj.Parent then
+                local pName = obj.Parent.Name:lower()
+                if pName:find("merchant") then
+                    found = obj.Parent
+                    foundName = obj.Parent.Name
+                end
+            end
+        end)
+        if found then break end
+    end
+    
+    if not found then
+        showNotification("❌ Không tìm thấy Merchant trong map!")
+        return
+    end
+    
+    -- Lấy vị trí
+    local targetPos = nil
+    if found:IsA("BasePart") then
+        targetPos = found.Position
+    elseif found:IsA("Model") then
+        local primary = found.PrimaryPart 
+            or found:FindFirstChild("HumanoidRootPart") 
+            or found:FindFirstChildWhichIsA("BasePart")
+        if primary then
+            targetPos = primary.Position
+        end
+    end
+    
+    if not targetPos then
+        showNotification("❌ Không lấy được vị trí Merchant!")
+        return
+    end
+    
+    showNotification("✅ Tìm thấy: " .. foundName)
+    
+    -- Tele trực tiếp đến Merchant
+    root.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    task.wait(0.1)
+    root.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    
+    showNotification("✅ Đã tele đến " .. foundName .. "!")
+end)
+
+-- ==========================================
+-- TAB FARM - AUTO CLICK (tiếp tục)
+-- ==========================================
+AddSection(FarmTab, "AUTO CLICK")
+local autoClicker = false
+
+local function startAutoClick()
+    task.spawn(function()
+        while autoClicker do
+            pcall(function()
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            end)
+            task.wait(config.autoClickInterval)
+        end
+    end)
+end
+
+local autoClickToggle = AddToggle(FarmTab, "🖱️ Auto Click (Ấn Y)", function(state)
+    autoClicker = state
+    showNotification(state and "✅ Đã bật Auto Click!" or "❌ Đã tắt Auto Click!")
+    if state then
+        startAutoClick()
+    end
+end)
+
+AddInput(FarmTab, "Tốc Độ Auto Click", config.autoClickInterval, function(v)
+    config.autoClickInterval = v
+    showNotification("✅ Tốc độ auto click: " .. v)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.Y then
+        autoClickToggle.SetState(not autoClickToggle.GetState())
+    end
+end)
+
+-- ==========================================
+-- TAB 5: 🏴‍☠️ TELEPORT RƯƠNG
+-- ==========================================
+local ChestTab = CreateTab("Rương", "🏴‍☠️")
+
+AddSection(ChestTab, "RƯƠNG ĐẢO")
+
+local chestList = {
+    {Name = "🐉 RƯƠNG Dragon Island", Position = Vector3.new(201.8, 934.8, -2999.8)},
+    {Name = "🐝 RƯƠNG Forgotten Frams", Position = Vector3.new(102.5, -29.6, -962.3)},
+    {Name = "🧸 RƯƠNG Plushie Island", Position = Vector3.new(2251, -92.7, -275.3)},
+    {Name = "⚓ RƯƠNG Lost Docks", Position = Vector3.new(1229.8, -84.3, -4360.5)},
+    {Name = "🌊 RƯƠNG Forgotten Depths", Position = Vector3.new(6.7, -1725, -4956.8)},
+    {Name = "🦁 RƯƠNG Safari Island", Position = Vector3.new(-2533.9, 22, -2879.2)},
+    {Name = "🌋 RƯƠNG Volcano Island", Position = Vector3.new(-2391.6, -247.7, -1686.5)},
+    {Name = "⏳ RƯƠNG Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
+}
+
+for _, chest in ipairs(chestList) do
+    AddButton(ChestTab, chest.Name, Color3.fromRGB(0, 130, 110), function()
+        flyToPosition(chest.Position, chest.Name)
+    end)
+end
+
+AddButton(ChestTab, "🛑 Dừng Bay", Color3.fromRGB(200, 50, 50), function()
+    stopFlying()
+    showNotification("🛑 Đã dừng!")
+end)
+
+-- ==========================================
+-- TAB 6: 👥 PLAYERS
+-- ==========================================
+local PlayersTab = CreateTab("Players", "👥")
+
+AddSection(PlayersTab, "TELEPORT NGƯỜI CHƠI")
+
+local playerButtons = {}
+
+local function refreshPlayerList()
+    for _, btn in ipairs(playerButtons) do
+        btn:Destroy()
+    end
+    playerButtons = {}
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local btn = AddButton(PlayersTab, "👤" .. player.Name, Color3.fromRGB(40, 40, 55), function()
+                pcall(function()
+                    local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if targetRoot and myRoot then
+                        myRoot.CFrame = CFrame.new(targetRoot.Position + Vector3.new(0, 3, 0))
+                        myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        showNotification("✅ Đã teleport đến " .. player.Name)
+                    else
+                        showNotification("❌ " .. player.Name .. " chưa spawn!")
+                    end
+                end)
+            end)
+            table.insert(playerButtons, btn)
+        end
+    end
+end
+
+AddButton(PlayersTab, "🔄 Làm Mới Danh Sách", Color3.fromRGB(0, 180, 90), function()
+    refreshPlayerList()
+    showNotification("✅ Đã làm mới danh sách!")
+end)
+
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    refreshPlayerList()
+end)
+
+Players.PlayerRemoving:Connect(function()
+    task.wait(1)
+    refreshPlayerList()
+end)
+
+task.wait(0.5)
+refreshPlayerList()
+
+-- ==========================================
+-- TAB 7: ⚙️ SETTINGS
+-- ==========================================
+local SettingsTab = CreateTab("Settings", "⚙️")
+
+AddSection(SettingsTab, "SERVER")
+
+AddButton(SettingsTab, "📋 Sao Chép ID Server", Color3.fromRGB(0, 130, 230), function()
+    local serverId = game.JobId
+    if setclipboard then setclipboard(serverId) end
+    showNotification("📋 ID: " .. serverId)
+end)
+
+local ServerIdBox = Instance.new("TextBox", SettingsTab)
+ServerIdBox.Size = UDim2.new(1, 0, 0, 38)
+ServerIdBox.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+ServerIdBox.PlaceholderText = "Nhập ID Server..."
+ServerIdBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+ServerIdBox.Font = Enum.Font.GothamBold
+ServerIdBox.TextSize = 12
+Instance.new("UICorner", ServerIdBox).CornerRadius = UDim.new(0, 8)
+
+AddButton(SettingsTab, "🚀 Gia Nhập Server ID", Color3.fromRGB(0, 180, 90), function()
+    local serverId = ServerIdBox.Text
+    if serverId and serverId ~= "" then
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, serverId, LocalPlayer)
+    else
+        showNotification("❌ Hãy nhập ID Server!")
+    end
+end)
+
+AddSection(SettingsTab, "TỐI ƯU HÓA")
+
+AddButton(SettingsTab, "🔧 Fix Lag (Giảm Đồ Hoạ)", Color3.fromRGB(0, 180, 230), function()
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 50
+        Lighting.Brightness = 0.5
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+        
+        pcall(function() 
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 
+        end)
+        
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            pcall(function()
+                if obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
+                    obj.Enabled = false
+                end
+            end)
+        end
+        
+        if setfpscap then setfpscap(30) end
+        showNotification("✅ Đã giảm đồ hoạ")
+    end)
+end)
+
+AddButton(SettingsTab, "⚡ Tăng FPS", Color3.fromRGB(140, 40, 180), function()
+    pcall(function()
+        if setfpscap then setfpscap(9999) end
+        showNotification("⚡ Đã tăng FPS!")
+    end)
+end)
+
+AddSection(SettingsTab, "KHÁC")
+
+AddButton(SettingsTab, "🔄 Rejoin Server", Color3.fromRGB(40, 110, 70), function()
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+
+AddButton(SettingsTab, "💀 Reset Nhân Vật", Color3.fromRGB(160, 80, 0), function()
+    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum.Health = 0 end
+end)
+
+-- ==========================================
+-- TOGGLE BUTTON
+-- ==========================================
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Position = UDim2.new(0, 15, 0.4, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+ToggleButton.Text = "⚓"
+ToggleButton.TextColor3 = Color3.fromRGB(138, 43, 226)
+ToggleButton.Font = Enum.Font.GothamBlack
+ToggleButton.TextSize = 22
+ToggleButton.ZIndex = 100
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Visible = false
+
+local tStroke = Instance.new("UIStroke", ToggleButton)
+tStroke.Color = Color3.fromRGB(138, 43, 226)
+tStroke.Thickness = 2.5
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+ToggleButton.TouchTap:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+task.spawn(function()
+    task.wait(5.5)
+    ToggleButton.Visible = true
+end)
+
+print("=================================")
+print("⚓ NGHIA SENPAI HUB - BLOX FRUIT STYLE")
+print("=================================")
+print("📌 Ấn CTRL để bật/tắt menu")
+print("📌 Tên hub ở giữa thanh trên cùng")
+print("📌 Đã thêm Xuyên Tường (không xuyên đất)")
+print("📌 Đã thêm TELE MERCHANT trong tab Farm")
+print("=================================")
