@@ -119,6 +119,190 @@ if hookfunction then
 end
 
 -- ==========================================
+-- PLAYER INFO DISPLAY (Ấn P hoặc nút góc phải)
+-- Thời gian chơi KHÔNG reset khi tắt/bật
+-- ==========================================
+local playerInfoEnabled = false
+local playerInfoFrame = nil
+local playerInfoConn = nil
+local playerInfoButton = nil
+local scriptStartTime = tick()  -- Lưu thời điểm script bật (không reset)
+
+local function formatTime(seconds)
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    local s = math.floor(seconds % 60)
+    if h > 0 then
+        return h .. "h " .. m .. "m " .. s .. "s"
+    elseif m > 0 then
+        return m .. "m " .. s .. "s"
+    else
+        return s .. "s"
+    end
+end
+
+local function createPlayerInfoUI()
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+    local old = pg:FindFirstChild("PlayerInfoUI")
+    if old then old:Destroy() end
+    
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "PlayerInfoUI"
+    sg.ResetOnSpawn = false
+    sg.DisplayOrder = 100
+    sg.Parent = pg
+    
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 380, 0, 230)
+    frame.Position = UDim2.new(1, -400, 0, 90)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(138, 43, 226)
+    stroke.Thickness = 3
+    
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -20, 0, 35)
+    title.Position = UDim2.new(0, 10, 0, 8)
+    title.BackgroundTransparency = 1
+    title.Text = "⚓ NGHIA SENPAI HUB"
+    title.TextColor3 = Color3.fromRGB(138, 43, 226)
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 16
+    
+    local info = Instance.new("TextLabel", frame)
+    info.Size = UDim2.new(1, -20, 0, 65)
+    info.Position = UDim2.new(0, 10, 0, 45)
+    info.BackgroundTransparency = 1
+    info.Text = "👤 Tên: " .. LocalPlayer.Name .. "\n" ..
+                "✅ Đã bật script\n" ..
+                "📅 Tuổi tài khoản: " .. (LocalPlayer.AccountAge or 0) .. " ngày"
+    info.TextColor3 = Color3.fromRGB(255, 255, 255)
+    info.Font = Enum.Font.GothamBold
+    info.TextSize = 12
+    info.TextWrapped = true
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.TextYAlignment = Enum.TextYAlignment.Top
+    
+    local timeLabel = Instance.new("TextLabel", frame)
+    timeLabel.Size = UDim2.new(1, -20, 0, 25)
+    timeLabel.Position = UDim2.new(0, 10, 0, 115)
+    timeLabel.BackgroundTransparency = 1
+    timeLabel.Text = "⏱️ Thời gian chơi: 0s"
+    timeLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
+    timeLabel.Font = Enum.Font.GothamBold
+    timeLabel.TextSize = 12
+    timeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local serverLabel = Instance.new("TextLabel", frame)
+    serverLabel.Size = UDim2.new(1, -20, 0, 25)
+    serverLabel.Position = UDim2.new(0, 10, 0, 145)
+    serverLabel.BackgroundTransparency = 1
+    serverLabel.Text = "🌐 Server uptime: 0s"
+    serverLabel.TextColor3 = Color3.fromRGB(100, 220, 255)
+    serverLabel.Font = Enum.Font.GothamBold
+    serverLabel.TextSize = 12
+    serverLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local pingLabel = Instance.new("TextLabel", frame)
+    pingLabel.Size = UDim2.new(1, -20, 0, 25)
+    pingLabel.Position = UDim2.new(0, 10, 0, 175)
+    pingLabel.BackgroundTransparency = 1
+    pingLabel.Text = "📡 Ping: --"
+    pingLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    pingLabel.Font = Enum.Font.GothamBold
+    pingLabel.TextSize = 12
+    pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Cập nhật mỗi giây - DÙNG scriptStartTime (KHÔNG RESET)
+    playerInfoConn = task.spawn(function()
+        while playerInfoEnabled and frame and frame.Parent do
+            local elapsed = tick() - scriptStartTime  -- Không reset khi tắt/bật
+            timeLabel.Text = "⏱️ Thời gian chơi: " .. formatTime(elapsed)
+            
+            local serverTime = workspace.DistributedGameTime or 0
+            serverLabel.Text = "🌐 Server uptime: " .. formatTime(serverTime)
+            
+            local ok, ping = pcall(function()
+                return LocalPlayer:GetNetworkPing() * 1000
+            end)
+            if ok and ping then
+                pingLabel.Text = "📡 Ping: " .. math.floor(ping) .. " ms"
+            end
+            
+            task.wait(1)
+        end
+    end)
+    
+    return sg
+end
+
+local function togglePlayerInfo()
+    playerInfoEnabled = not playerInfoEnabled
+    
+    if playerInfoEnabled then
+        playerInfoFrame = createPlayerInfoUI()
+        showNotification("✅ Đã bật thông tin Player!")
+    else
+        if playerInfoFrame then
+            playerInfoFrame:Destroy()
+            playerInfoFrame = nil
+        end
+        showNotification("❌ Đã tắt thông tin Player!")
+    end
+end
+
+-- Ấn P để bật/tắt
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.P then
+        togglePlayerInfo()
+    end
+end)
+
+-- Nút góc phải trên màn hình (luôn hiện)
+task.spawn(function()
+    task.wait(1)
+    
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+    local btnGui = Instance.new("ScreenGui")
+    btnGui.Name = "PlayerInfoButton"
+    btnGui.ResetOnSpawn = false
+    btnGui.DisplayOrder = 101
+    btnGui.Parent = pg
+    
+    local btn = Instance.new("TextButton", btnGui)
+    btn.Size = UDim2.new(0, 55, 0, 55)
+    btn.Position = UDim2.new(1, -75, 0, 15)  -- GÓC PHẢI TRÊN
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    btn.Text = "📊"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBlack
+    btn.TextSize = 22
+    btn.ZIndex = 101
+    btn.Active = true
+    btn.Draggable = true
+    btn.Visible = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+    
+    local s = Instance.new("UIStroke", btn)
+    s.Color = Color3.fromRGB(138, 43, 226)
+    s.Thickness = 2.5
+    
+    playerInfoButton = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        togglePlayerInfo()
+    end)
+    btn.TouchTap:Connect(function()
+        togglePlayerInfo()
+    end)
+    
+    print("[PlayerInfo] Nút 📊 đã tạo ở góc phải")
+end)
+
+-- ==========================================
 -- 3. HOOK __NAMECALL (bắt kick qua :Kick())
 -- ==========================================
 local mt = getrawmetatable and getrawmetatable(game)
@@ -245,6 +429,191 @@ local function showNotice(text, color)
         if frame and frame.Parent then frame:Destroy() end
     end)
 end
+
+-- ==========================================
+-- ANTI-KICK 5 LỚP HOÀN CHỈNH
+-- Thông báo góc phải, hiện 3 giây
+-- ==========================================
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local VirtualUser = game:GetService("VirtualUser")
+local LocalPlayer = Players.LocalPlayer
+
+-- ==========================================
+-- HÀM THÔNG BÁO
+-- ==========================================
+local function showAntiKickNotice(title, text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = 3  -- ĐỔI TỪ 5 THÀNH 3
+        })
+    end)
+end
+
+local function showAntiKickUI(text)
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+    local old = pg:FindFirstChild("AntiKickStartup")
+    if old then old:Destroy() end
+    
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "AntiKickStartup"
+    sg.ResetOnSpawn = false
+    sg.Parent = pg
+    
+    local frame = Instance.new("Frame", sg)
+    frame.Size = UDim2.new(0, 350, 0, 200)
+    -- ĐỔI VỊ TRÍ: GÓC PHẢI TRÊN MÀN HÌNH
+    frame.Position = UDim2.new(1, -370, 0, 20)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(0, 255, 100)
+    stroke.Thickness = 3
+    
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -20, 0, 35)
+    title.Position = UDim2.new(0, 10, 0, 10)
+    title.BackgroundTransparency = 1
+    title.Text = "🛡️ ANTI-KICK ĐÃ BẬT"
+    title.TextColor3 = Color3.fromRGB(0, 255, 100)
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 16
+    
+    local content = Instance.new("TextLabel", frame)
+    content.Size = UDim2.new(1, -20, 0, 140)
+    content.Position = UDim2.new(0, 10, 0, 50)
+    content.BackgroundTransparency = 1
+    content.Text = text
+    content.TextColor3 = Color3.fromRGB(220, 220, 220)
+    content.Font = Enum.Font.GothamSemibold
+    content.TextSize = 11
+    content.TextWrapped = true
+    content.TextXAlignment = Enum.TextXAlignment.Left
+    content.TextYAlignment = Enum.TextYAlignment.Top
+    
+    -- ĐỔI THỜI GIAN: TỪ 6 GIÂY XUỐNG 3 GIÂY
+    task.delay(3, function()
+        if frame and frame.Parent then frame:Destroy() end
+    end)
+end
+
+-- ==========================================
+-- LỚP 1: Hook __namecall
+-- ==========================================
+local mt = getrawmetatable and getrawmetatable(game)
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldNamecall = mt.__namecall
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if (method == "Kick" or method == "kick") and self == LocalPlayer then
+                local args = {...}
+                local reason = tostring(args[1] or "Không rõ")
+                showAntiKickNotice("🛡️ ĐÃ CHẶN KICK", "Lớp 1: " .. reason)
+                return nil
+            end
+            return oldNamecall(self, ...)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] ✅ Lớp 1: Hook __namecall")
+    end)
+end
+
+-- ==========================================
+-- LỚP 2: Hook trực tiếp hàm Kick
+-- ==========================================
+if hookfunction then
+    pcall(function()
+        hookfunction(LocalPlayer.Kick, function(self, ...)
+            local args = {...}
+            local reason = tostring(args[1] or "Không rõ")
+            showAntiKickNotice("🛡️ ĐÃ CHẶN KICK", "Lớp 2: " .. reason)
+            return nil
+        end)
+        print("[Anti-Kick] ✅ Lớp 2: Hook hàm Kick")
+    end)
+end
+
+-- ==========================================
+-- LỚP 3: Hook __index
+-- ==========================================
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldIndex = mt.__index
+        mt.__index = newcclosure(function(self, key)
+            if self == LocalPlayer and (key == "Kick" or key == "kick") then
+                return function(...)
+                    local args = {...}
+                    local reason = tostring(args[1] or "Không rõ")
+                    showAntiKickNotice("🛡️ ĐÃ CHẶN KICK", "Lớp 3: " .. reason)
+                    return nil
+                end
+            end
+            return oldIndex(self, key)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] ✅ Lớp 3: Hook __index")
+    end)
+end
+
+-- ==========================================
+-- LỚP 4: Hook __newindex
+-- ==========================================
+if mt and setreadonly then
+    pcall(function()
+        setreadonly(mt, false)
+        local oldNewIndex = mt.__newindex
+        mt.__newindex = newcclosure(function(self, key, value)
+            if self == LocalPlayer and (key == "Kick" or key == "kick") then
+                showAntiKickNotice("🛡️ ĐÃ CHẶN", "Lớp 4: Chặn ghi đè hàm Kick")
+                return nil
+            end
+            return oldNewIndex(self, key, value)
+        end)
+        setreadonly(mt, true)
+        print("[Anti-Kick] ✅ Lớp 4: Hook __newindex")
+    end)
+end
+
+-- ==========================================
+-- LỚP 5: Chống kick AFK
+-- ==========================================
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+print("[Anti-Kick] ✅ Lớp 5: Chống AFK")
+
+-- ==========================================
+-- THÔNG BÁO KHI BẬT
+-- ==========================================
+print("=================================")
+print("🛡️ ANTI-KICK 5 LỚP ĐÃ BẬT")
+print("=================================")
+
+showAntiKickNotice("🛡️ ANTI-KICK ĐÃ BẬT", "Cả 5 lớp chống kick đã hoạt động!")
+
+showAntiKickUI([[
+✅ Lớp 1: Hook __namecall
+✅ Lớp 2: Hook hàm Kick
+✅ Lớp 3: Hook __index
+✅ Lớp 4: Hook __newindex
+✅ Lớp 5: Chống AFK
+
+⚠️ Không chặn được:
+- Server kick (267)
+- Hyperion kick
+- Mất mạng
+]])
 
 -- ==========================================
 -- CHẶN KICK TỪ SERVER
@@ -1771,6 +2140,28 @@ end)
 
 task.wait(0.5)
 refreshPlayerList()
+
+-- TELE NPC
+AddSection(TpTab, "TELE NPC")
+local npcList = {
+    {Name = "Jimmy", Position = Vector3.new(-3374.5, 9.1, -2749.8)},
+    {Name = "Dan", Position = Vector3.new(-3400.1, 9.1, -2748.9)},
+    {Name = "Jack", Position = Vector3.new(-4330.1, -415.6, -1971.8)},
+    {Name = "Diver John", Position = Vector3.new(10.5, 13.7, -5045.5)},
+    {Name = "???", Position = Vector3.new(-2413.6, -171.8, -1680.8)},
+    {Name = "Cirrus", Position = Vector3.new(-9669.8, 5330.8, -1281.1)},
+    {Name = "Jim", Position = Vector3.new(-9654.2, 5318.6, -1439.2)},
+    {Name = "Arthur", Position = Vector3.new(-1717.8, 964.2, -5130.4)},
+    {Name = "Seraphina", Position = Vector3.new(2145.3, 12.6, -2775.5)},
+    {Name = "Parker", Position = Vector3.new(-1589.9, 6.8, -5045.1)},
+    {Name = "Valerian", Position = Vector3.new(1227.9, -83.9, -4360.5)},
+    {Name = "Isaac", Position = Vector3.new(-27.3, 918.1, -3280.2)},
+}
+for _, npc in ipairs(npcList) do
+    AddButton(TpTab, "👤 " .. npc.Name, Color3.fromRGB(60, 100, 180), function()
+        flyToPosition(npc.Position, npc.Name)
+    end)
+end
 
 -- ==========================================
 -- TAB 7: ⚙️ SETTINGS
