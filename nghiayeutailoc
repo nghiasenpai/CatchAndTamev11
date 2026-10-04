@@ -37,6 +37,8 @@ if mt and setreadonly then
     end)
 end
 
+
+
 -- ==========================================
 -- ANTI-KICK FULL (Chặn kick mọi ngả)
 -- Nối vào script, không cần menu
@@ -101,6 +103,20 @@ local function showNotice(title, text, color)
     task.delay(5, function()
         if frame and frame.Parent then frame:Destroy() end
     end)
+end
+
+-- ==========================================
+-- CHỐNG CHẠY TRÙNG (Chỉ chạy 1 lần)
+-- ==========================================
+if _G.NghiaSenpaiHubLoaded then
+    print("⚠️ Script đã chạy rồi! Không chạy lại.")
+    return
+end
+_G.NghiaSenpaiHubLoaded = true
+
+-- Tự động reset flag khi script dừng (nếu executor hỗ trợ)
+if getgenv then
+    getgenv().NghiaSenpaiHubLoaded = true
 end
 
 -- ==========================================
@@ -1297,6 +1313,55 @@ AddToggle(MainTab, "🚪 Xuyên Tường", function(state)
     end
 end)
 
+-- ==========================================
+-- GOD MODE - CÁCH 2: Hook hàm gây damage
+-- ==========================================
+local godModeEnabled2 = false
+
+local function startGodMode2()
+    local mt = getrawmetatable and getrawmetatable(game)
+    if not mt or not setreadonly then
+        showNotification("❌ Executor không hỗ trợ hook!")
+        return
+    end
+    
+    setreadonly(mt, false)
+    local oldNamecall = mt.__namecall
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        
+        -- Chặn các hàm gây damage
+        if godModeEnabled2 then
+            local blockedMethods = {
+                "TakeDamage", "Damage", "Hit", "Attack", 
+                "Kill", "Die", "Hurt", "Destroy"
+            }
+            for _, blocked in ipairs(blockedMethods) do
+                if method == blocked then
+                    -- Nếu là nhân vật mình → chặn
+                    if self == LocalPlayer.Character 
+                        or self == LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                        return nil
+                    end
+                end
+            end
+        end
+        
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+end
+
+AddToggle(MainTab, "🛡️ Chống Sát Thương V2", function(state)
+    godModeEnabled2 = state
+    if state then
+        startGodMode2()
+        showNotification("✅ Đã bật Chống Sát Thương V2!")
+    else
+        showNotification("❌ Đã tắt!")
+    end
+end)
+
 AddButton(MainTab, "🏠 Teleport Về Home", Color3.fromRGB(0, 150, 200), function()
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if root then
@@ -2140,28 +2205,6 @@ end)
 
 task.wait(0.5)
 refreshPlayerList()
-
--- TELE NPC
-AddSection(TpTab, "TELE NPC")
-local npcList = {
-    {Name = "Jimmy", Position = Vector3.new(-3374.5, 9.1, -2749.8)},
-    {Name = "Dan", Position = Vector3.new(-3400.1, 9.1, -2748.9)},
-    {Name = "Jack", Position = Vector3.new(-4330.1, -415.6, -1971.8)},
-    {Name = "Diver John", Position = Vector3.new(10.5, 13.7, -5045.5)},
-    {Name = "???", Position = Vector3.new(-2413.6, -171.8, -1680.8)},
-    {Name = "Cirrus", Position = Vector3.new(-9669.8, 5330.8, -1281.1)},
-    {Name = "Jim", Position = Vector3.new(-9654.2, 5318.6, -1439.2)},
-    {Name = "Arthur", Position = Vector3.new(-1717.8, 964.2, -5130.4)},
-    {Name = "Seraphina", Position = Vector3.new(2145.3, 12.6, -2775.5)},
-    {Name = "Parker", Position = Vector3.new(-1589.9, 6.8, -5045.1)},
-    {Name = "Valerian", Position = Vector3.new(1227.9, -83.9, -4360.5)},
-    {Name = "Isaac", Position = Vector3.new(-27.3, 918.1, -3280.2)},
-}
-for _, npc in ipairs(npcList) do
-    AddButton(TpTab, "👤 " .. npc.Name, Color3.fromRGB(60, 100, 180), function()
-        flyToPosition(npc.Position, npc.Name)
-    end)
-end
 
 -- ==========================================
 -- TAB 7: ⚙️ SETTINGS
