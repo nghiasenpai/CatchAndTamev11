@@ -37,8 +37,6 @@ if mt and setreadonly then
     end)
 end
 
-
-
 -- ==========================================
 -- ANTI-KICK FULL (Chặn kick mọi ngả)
 -- Nối vào script, không cần menu
@@ -1869,7 +1867,182 @@ AddButton(FarmTab, "🥥 Coconut", Color3.fromRGB(130, 60, 15), function()
         showNotification("❌ Không tìm thấy Coconut")
     end
 end)
+-- ==========================================
+-- FREECAM (Camera tự do - FIX 2)
+-- Nhân vật đứng im + Xoay màn hình được
+-- ==========================================
+local freecamEnabled = false
+local freecamSpeed = 50
+local freecamConnection = nil
+local freecamOriginalCFrame = nil
+local freecamOriginalType = nil
+local freecamOriginalSubject = nil
+local freecamKeys = {}
+local freecamYaw = 0
+local freecamPitch = 0
+local freecamPos = Vector3.new(0, 0, 0)
+local freecamMouseDown = false
 
+local function startFreecam()
+    local camera = workspace.CurrentCamera
+    if not camera then return end
+    
+    -- Lưu trạng thái camera cũ
+    freecamOriginalCFrame = camera.CFrame
+    freecamOriginalType = camera.CameraType
+    freecamOriginalSubject = camera.CameraSubject
+    
+    -- Đặt camera thành Scriptable
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    -- Lấy hướng camera hiện tại
+    freecamPos = camera.CFrame.Position
+    local lookVec = camera.CFrame.LookVector
+    freecamYaw = math.atan2(-lookVec.X, -lookVec.Z)
+    freecamPitch = math.asin(lookVec.Y)
+    
+    -- NHÂN VẬT ĐỨNG IM: Đặt WalkSpeed/JumpPower = 0
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = 0
+            hum.JumpPower = 0
+            hum.UseJumpPower = true
+        end
+    end
+    
+    freecamConnection = RunService.RenderStepped:Connect(function(dt)
+        if not freecamEnabled then return end
+        local cam = workspace.CurrentCamera
+        if not cam then return end
+        
+        -- Đảm bảo camera Scriptable
+        if cam.CameraType ~= Enum.CameraType.Scriptable then
+            cam.CameraType = Enum.CameraType.Scriptable
+        end
+        
+        -- Đảm bảo nhân vật đứng im
+        local char2 = LocalPlayer.Character
+        if char2 then
+            local hum2 = char2:FindFirstChildOfClass("Humanoid")
+            if hum2 then
+                hum2.WalkSpeed = 0
+                hum2.JumpPower = 0
+            end
+        end
+        
+        -- XỬ LÝ XOAY CHUỘT PHẢI
+        if freecamMouseDown then
+            local mouseDelta = UserInputService:GetMouseDelta()
+            freecamYaw = freecamYaw - mouseDelta.X * 0.005
+            freecamPitch = math.clamp(freecamPitch - mouseDelta.Y * 0.005, -math.pi/2 + 0.1, math.pi/2 - 0.1)
+        end
+        
+        -- Tính hướng camera từ yaw/pitch
+        local lookDir = Vector3.new(
+            -math.sin(freecamYaw) * math.cos(freecamPitch),
+            math.sin(freecamPitch),
+            -math.cos(freecamYaw) * math.cos(freecamPitch)
+        )
+        
+        local rightDir = lookDir:Cross(Vector3.new(0, 1, 0)).Unit
+        local upDir = Vector3.new(0, 1, 0)
+        
+        -- DI CHUYỂN CAMERA
+        local moveDir = Vector3.new(0, 0, 0)
+        if freecamKeys[Enum.KeyCode.W] then moveDir = moveDir + lookDir end
+        if freecamKeys[Enum.KeyCode.S] then moveDir = moveDir - lookDir end
+        if freecamKeys[Enum.KeyCode.A] then moveDir = moveDir - rightDir end
+        if freecamKeys[Enum.KeyCode.D] then moveDir = moveDir + rightDir end
+        if freecamKeys[Enum.KeyCode.Space] then moveDir = moveDir + upDir end
+        if freecamKeys[Enum.KeyCode.LeftControl] then moveDir = moveDir - upDir end
+        
+        if moveDir.Magnitude > 0 then
+            freecamPos = freecamPos + moveDir.Unit * freecamSpeed * dt
+        end
+        
+        -- Đặt camera mới
+        cam.CFrame = CFrame.new(freecamPos, freecamPos + lookDir)
+    end)
+end
+
+local function stopFreecam()
+    freecamEnabled = false
+    if freecamConnection then
+        freecamConnection:Disconnect()
+        freecamConnection = nil
+    end
+    
+    -- Khôi phục camera
+    local camera = workspace.CurrentCamera
+    if camera then
+        if freecamOriginalCFrame then
+            camera.CFrame = freecamOriginalCFrame
+        end
+        if freecamOriginalType then
+            camera.CameraType = freecamOriginalType
+        else
+            camera.CameraType = Enum.CameraType.Custom
+        end
+        if freecamOriginalSubject then
+            camera.CameraSubject = freecamOriginalSubject
+        end
+    end
+    
+    -- KHÔI PHỤC NHÂN VẬT DI CHUYỂN ĐƯỢC
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = 16
+            hum.JumpPower = 50
+        end
+    end
+end
+
+-- NHẬN PHÍM
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    
+    if input.KeyCode == Enum.KeyCode.W or input.KeyCode == Enum.KeyCode.A 
+        or input.KeyCode == Enum.KeyCode.S or input.KeyCode == Enum.KeyCode.D
+        or input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.LeftControl then
+        freecamKeys[input.KeyCode] = true
+    end
+    
+    -- Chuột phải để xoay
+    if input.UserInputType == Enum.UserInputType.MouseButton2 and freecamEnabled then
+        freecamMouseDown = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    freecamKeys[input.KeyCode] = nil
+    
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        freecamMouseDown = false
+    end
+end)
+
+-- THÊM VÀO MAIN TAB
+AddSection(MainTab, "FREECAM")
+
+AddToggle(MainTab, "🎥 Freecam ", function(state)
+    freecamEnabled = state
+    if state then
+        startFreecam()
+        showNotification("✅ Đã bật Freecam! Giữ chuột phải để xoay")
+    else
+        stopFreecam()
+        showNotification("❌ Đã tắt Freecam!")
+    end
+end)
+
+AddInput(MainTab, "Tốc Độ Freecam", freecamSpeed, function(v)
+    freecamSpeed = math.clamp(v, 10, 500)
+    showNotification("✅ Tốc độ Freecam: " .. freecamSpeed)
+end)
 -- ==========================================
 -- TELEPORT MERCHANT (THÊM VÀO TAB FARM)
 -- ==========================================
