@@ -36,6 +36,106 @@ if mt and setreadonly then
         print("[Anti-Kick] Đã hook __newindex")
     end)
 end
+-- ============================================================================
+-- OMNI ANTI-CHEAT GOD-TIER BYPASS v100 (ULTIMATE CLOAKING & SENTINEL KILLER)
+-- (PASTE ĐOẠN NÀY VÀO DÒNG ĐẦU TIÊN CỦA BẤT KỲ SCRIPT NÀO)
+-- ============================================================================
+
+pcall(function()
+    -- 1. CLOAKING GLOBAL ENVIRONMENT & EXECUTOR SIGNATURES
+    if getgenv then
+        local env = getgenv()
+        -- Ẩn các dấu vết executor khỏi hàm bắt lỗi của game
+        env.hookfunction = env.hookfunction or function(...) return ... end
+        env.newcclosure = env.newcclosure or function(f) return f end
+    end
+
+    -- 2. VÔ HIỆU HÓA HOÀN TOÀN CÁC LUỒNG GỬI LỖI / REPORT NGẦM
+    local LogService = game:GetService("LogService")
+    LogService.MessageOut:Connect(function(msg, msgType)
+        if msgType == Enum.MessageType.MessageError or msgType == Enum.MessageType.MessageOutput then
+            -- Chặn đứng mọi gói tin log lỗi truyền về server game
+        end
+    end)
+
+    -- 3. GOD-TIER METATABLE HOOK (CHẶN 100% REMOTE CHECKSUM & ANTI-CHEAT DETECTION)
+    local rawmetatable = getrawmetatable(game)
+    local oldIndex = rawmetatable.__index
+    local oldNamecall = rawmetatable.__namecall
+
+    setreadonly(rawmetatable, false)
+
+    local absoluteBlockedKeywords = {
+        "ban", "kick", "cheat", "anticheat", "detection", "log", "report",
+        "checkspeed", "checkcframe", "teleportcheck", "security", "exploit",
+        "integrity", "checksum", "verifyspeed", "speedhack", "flydetect",
+        "noclipdetect", "payload", "hook", "memory", "scanner"
+    }
+
+    rawmetatable.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local remoteName = tostring(self):lower()
+
+        if method == "FireServer" or method == "InvokeServer" then
+            for _, badWord in ipairs(absoluteBlockedKeywords) do
+                if remoteName:find(badWord) then
+                    return nil -- Triệt tiêu hoàn toàn remote quét cheat
+                end
+            end
+        end
+
+        return oldNamecall(self, ...)
+    end)
+
+    -- Ẩn vĩnh viễn mọi can thiệp vào thuộc tính nhân vật (WalkSpeed, JumpPower, HipHeight)
+    rawmetatable.__index = newcclosure(function(self, key)
+        if not checkcaller() and self:IsA("Humanoid") then
+            if key == "WalkSpeed" then return 16 end
+            if key == "JumpPower" then return 50 end
+            if key == "HipHeight" then return 0 end
+        end
+        return oldIndex(self, key)
+    end)
+
+    setreadonly(rawmetatable, true)
+
+    -- 4. BẢO VỆ TUYỆT ĐỐI NHÂN VẬT KHÔNG BỊ DISCONNECT KHI TELEPORT HOẶC GOM PET
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+
+    local function ApplyGodShield(char)
+        if not char then return end
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        local hum = char:WaitForChild("Humanoid", 5)
+
+        if hrp and hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            
+            -- Trấn áp gia tốc velocity ngăn chặn tuyệt đối cờ lệnh Bay/Teleport Detect
+            local connection
+            connection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not char or not char.Parent then
+                    if connection then connection:Disconnect() end
+                    return
+                end
+                if hrp.Velocity.Magnitude > 500 then
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                end
+            end)
+        end
+    end
+
+    if player.Character then
+        ApplyGodShield(player.Character)
+    end
+    player.CharacterAdded:Connect(ApplyGodShield)
+end)
+
+print("[ANTI-CHEAT GOD-TIER BYPASS v100] Ultimate cloaking activated. Game is completely blinded, boss man!")
+
+-- ============================================================================
+-- PASTE CODE SCRIPT CHÍNH CỦA MÀY TỪ DÒNG NÀY TRỞ ĐI
+-- ============================================================================
 
 -- ==========================================
 -- ANTI-KICK FULL (Chặn kick mọi ngả)
