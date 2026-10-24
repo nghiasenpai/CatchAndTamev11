@@ -1836,11 +1836,11 @@ local islandList = {
     {Name = "🌅 Sunken Island", Position = Vector3.new(2071.2, 11, -2628.4)},
     {Name = "⚓ Lost Docks", Position = Vector3.new(1411.7, 16.3, -4400)},
     {Name = "🌊 Forgotten Depths", Position = Vector3.new(12.7, 6.4, -4945.5)},
-    {Name = "🦁 Safari Island", Position = Vector3.new(-2243.8, 9.9, -2838.8)},
     {Name = "🌋 Volcano Island", Position = Vector3.new(-2283.2, 7.3, -1883.3)},
     {Name = "🦕 Dino Island", Position = Vector3.new(-1717.4, 964.2, -5122.7)},
     {Name = "⏳ Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
    {Name = "🛴Toy Island", Position = Vector3.new(2612.3, 47.3, 427.8)},
+   {Name = "🐉Pirate cove", Position = Vector3.new(-1763.4, 8.9, -2747.1)},
 }
 
 for _, island in ipairs(islandList) do
@@ -2410,7 +2410,6 @@ local chestList = {
     {Name = "🧸 RƯƠNG Plushie Island", Position = Vector3.new(2251, -92.7, -275.3)},
     {Name = "⚓ RƯƠNG Lost Docks", Position = Vector3.new(1298.7, -79.3, -4380.8)},
     {Name = "🌊 RƯƠNG Forgotten Depths", Position = Vector3.new(6.7, -1725, -4956.8)},
-    {Name = "🦁 RƯƠNG Safari Island", Position = Vector3.new(-2533.9, 22, -2879.2)},
     {Name = "🌋 RƯƠNG Volcano Island", Position = Vector3.new(-2391.6, -247.7, -1686.5)},
     {Name = "⏳ RƯƠNG Island Duration", Position = Vector3.new(620.3, 15, -2959.3)},
 }
